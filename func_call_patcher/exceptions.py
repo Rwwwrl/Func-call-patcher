@@ -1,0 +1,2 @@
+class ItCannotBeImported(BaseException):
+    pass
