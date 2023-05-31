@@ -148,6 +148,34 @@ class TestFuncPathcher:
             service.instancemethod_execute2()
             assert_file_exists()
 
+    def test_patch_func_in_executed_module(self, file_deleter, playground_path_prefix):
+        from func_call_patcher.pytests.playground.package2 import service
+
+        func_call_patcher = FuncCallPatcher(
+            path_to_func_in_executable_module=f'{playground_path_prefix}.service.func_to_patch_in_executed_module',
+            line_number_where_func_executed=59,
+            decorator_inner_func=decorator_inner_func,
+            is_method=False,
+        )
+        with func_call_patcher:
+            service.outer_func_to_patch_in_executed_module()
+            assert_file_exists()
+
+    def test_patch_func_in_executed_module_in_the_same_class(self, file_deleter, playground_path_prefix):
+        from func_call_patcher.pytests.playground.package2 import service
+
+        path = f'{playground_path_prefix}.service.SomeClass.func_to_patch_in_executed_module'
+        func_call_patcher = FuncCallPatcher(
+            path_to_func_in_executable_module=path,
+            line_number_where_func_executed=70,
+            decorator_inner_func=decorator_inner_func,
+            is_method=True,
+        )
+        with func_call_patcher:
+            service.SomeClass().outer_func_to_patch_in_executed_module()
+            # TODO сделать чтобы заработал
+            assert_file_exists()
+
 
 class TestMultiFuncCallPatcher:
     @staticmethod

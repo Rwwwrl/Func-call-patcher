@@ -47,3 +47,24 @@ def instancemethod_execute2():
     # что патчим: RobotModel.get_passport_value
     # проверка юз кейса, когда логика (.get_passport_value) вызывается внутри другого инстанс метода
     return robot.get_value()
+
+
+def func_to_patch_in_executed_module():
+    return 10
+
+
+def outer_func_to_patch_in_executed_module():
+    # что патчим: func_to_patch_in_executed_module
+    # проверка юз кейса, когда логика (func_to_patch_in_executed_module) в самом запускаемом модуле
+    return func_to_patch_in_executed_module()
+
+
+class SomeClass:
+    def func_to_patch_in_executed_module(self):
+        return 10
+
+    def outer_func_to_patch_in_executed_module(self):
+        # что патчим: .func_to_patch_in_executed_module
+        # проверка юз кейса, когда логика (.func_to_patch_in_executed_module) в самом запускаемом модуле,
+        # в том же классе
+        return self.func_to_patch_in_executed_module()
