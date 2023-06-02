@@ -5,12 +5,13 @@ from attrs import define
 
 from .exceptions import ItCannotBeImported
 from .import_tool import ImportTool
+from .utils import Path
 
 
 @define
 class PathData:
 
-    path_to_func_in_executable_module: str
+    path_to_func_in_executable_module: Path
     is_method: bool
 
 
@@ -64,7 +65,10 @@ class FuncCanBeImportedValidator(IValidator):
                 func_type = 'функция'
                 declension = 'импортированa'
             raise PathToFuncIsIncorrect(
-                f"{func_type} по пути '{self.obj.path_to_func_in_executable_module}' не может быть {declension}",
+                f"""
+                {func_type} по пути '{self.obj.path_to_func_in_executable_module.path}' не может быть {declension},
+                проверьте правильно ли вы указали путь.
+                """,
             )
 
 
@@ -77,7 +81,10 @@ def validate(
         LineNumberValidator(obj=line_number_where_func_executed),
         FuncCanBeImportedValidator(
             obj=PathData(
-                path_to_func_in_executable_module=path_to_func_in_executable_module,
+                path_to_func_in_executable_module=Path(
+                    path=path_to_func_in_executable_module,
+                    is_path_to_method=is_method,
+                ),
                 is_method=is_method,
             ),
         ),
