@@ -1,3 +1,6 @@
+from typing import Optional
+from uuid import uuid4
+
 from . import hints
 from .patcher import FuncPatcher, MethodPatcher
 from .utils import Path
@@ -10,6 +13,7 @@ class FuncCallPatcher:
         line_number_where_func_executed: int,
         decorator_inner_func: hints.DecoratorInnerFunc,
         is_method: bool,
+        relationship_identifier: Optional[hints.RelationshipIdentifier] = None,
     ):
         """
         Задачей данного FuncPatcher`а является запатчить один конкретный вызов функции/метода в запускаемом модуле.
@@ -81,6 +85,9 @@ class FuncCallPatcher:
             Пример path_to_func_in_executable_module, если is_method = True:
                 path_to_func_in_executable_module = "playground.package2.service.Agreggator.execute"
 
+        :param relationship_identifier - идентификтор взаимосвязаннсти, если два идентификтора были запущены в рамках
+          одного процесса, то они должны иметь один и тот же идентификатор.
+
         Пример использования патча для патчирования вызова some_func внутри package2.service из примера выше:
 
         # run.py
@@ -108,12 +115,16 @@ class FuncCallPatcher:
         Посмотреть на остальные сценарии использования можно в func_call_patcher/pytest/func_call_patcher.py
         """
 
+        if not relationship_identifier:
+            relationship_identifier = uuid4()
+
         if is_method:
             path = Path(path=path_to_func_in_executable_module, is_path_to_method=True)
             self._patcher = MethodPatcher(
                 path_to_func_in_executable_module=path,
                 line_number_where_func_executed=line_number_where_func_executed,
                 decorator_inner_func=decorator_inner_func,
+                relationship_identifier=relationship_identifier,
             )
         else:
             path = Path(path=path_to_func_in_executable_module, is_path_to_method=False)
@@ -121,6 +132,7 @@ class FuncCallPatcher:
                 path_to_func_in_executable_module=path,
                 line_number_where_func_executed=line_number_where_func_executed,
                 decorator_inner_func=decorator_inner_func,
+                relationship_identifier=relationship_identifier,
             )
 
     def __enter__(self):
