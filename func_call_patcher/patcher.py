@@ -1,7 +1,7 @@
 import abc
 import os
 import sys
-from typing import Callable
+from typing import Callable, Optional
 
 from mock import Mock, patch
 
@@ -52,6 +52,7 @@ class IPatcher(abc.ABC):
         path_to_func_in_executable_module: Path,
         line_where_func_executed: int,
         decorator_inner_func: hints.DecoratorInnerFunc,
+        relationship_identifier: Optional[hints.RelationshipIdentifier] = None,
     ):
         raise NotImplementedError
 
@@ -70,10 +71,12 @@ class BasePatcher(IPatcher):
         path_to_func_in_executable_module: Path,
         line_number_where_func_executed: int,
         decorator_inner_func: hints.DecoratorInnerFunc,
+        relationship_identifier: Optional[hints.RelationshipIdentifier] = None,
     ):
         self.path_to_func_in_executable_module = path_to_func_in_executable_module
         self.decorator_inner_func = decorator_inner_func
         self.line_where_func_executed = line_number_where_func_executed
+        self.relationship_identifier = relationship_identifier
 
     def _decorate_func_call(self, func: Callable):
         abc_path_to_executable_module = self.path_to_func_in_executable_module.abc_path_to_executable_module
@@ -89,7 +92,7 @@ class BasePatcher(IPatcher):
                         abc_path_to_executable_module=abc_path_to_executable_module,
                     )
                 ):
-                    result = self.decorator_inner_func(func, args, kwargs, frame)
+                    result = self.decorator_inner_func(func, args, kwargs, frame, self.relationship_identifier)
                     return result
                 frame = frame.f_back
             return func(*args, **kwargs)
