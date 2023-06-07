@@ -10,7 +10,7 @@ EXPECTED_RESULTS = Path(__file__).absolute().parent / 'expected_results'
 FILE_PATH = EXPECTED_RESULTS / 'file.txt'
 
 
-def decorator_inner_func(func, func_args, func_kwargs, frame: FrameType):
+def decorator_inner_func(func, func_args, func_kwargs, frame: FrameType, relationship_identifier):
     with open(FILE_PATH, 'w'):
         return func(*func_args, **func_kwargs)
 
@@ -21,11 +21,6 @@ def assert_file_exists():
 
 def assert_file_not_exists():
     assert FILE_PATH.exists() is False
-
-
-@pytest.fixture()
-def playground_path_prefix() -> str:
-    return 'func_call_patcher.pytests.playground.package2'
 
 
 def delete_file():
@@ -42,26 +37,13 @@ def file_deleter():
     delete_file()
 
 
-class TestFuncPathcher:
-    def test_inside_func_with_import_func_from_module(self, file_deleter, playground_path_prefix):
-        from func_call_patcher.pytests.playground.package2 import service
-
-        func_call_patcher = FuncCallPatcher(
-            path_to_func_in_executable_module=f'{playground_path_prefix}.service.some_func',
-            line_number_where_func_executed=11,
-            decorator_inner_func=decorator_inner_func,
-            is_method=False,
-        )
-        with func_call_patcher:
-            service.service_func()
-            assert_file_exists()
-
-    def test_inside_func_with_import_module_from_package(self, file_deleter, playground_path_prefix):
+class TestFuncCallPatcher:
+    def test_case0(self, file_deleter, PLAYGROUND_PATH_PREFIX):
         from func_call_patcher.pytests.playground.package2 import second_service
 
         func_call_patcher = FuncCallPatcher(
-            path_to_func_in_executable_module=f'{playground_path_prefix}.second_service.logic.some_func',
-            line_number_where_func_executed=8,
+            path_to_func_in_executable_module=f'{PLAYGROUND_PATH_PREFIX}.second_service.logic.some_func',
+            line_number_where_func_executed=9,
             decorator_inner_func=decorator_inner_func,
             is_method=False,
         )
@@ -69,11 +51,11 @@ class TestFuncPathcher:
             second_service.service_func()
             assert_file_exists()
 
-    def test_inside_global_scope(self, file_deleter, playground_path_prefix):
+    def test_case1(self, file_deleter, PLAYGROUND_PATH_PREFIX):
 
         func_call_patcher = FuncCallPatcher(
-            path_to_func_in_executable_module=f'{playground_path_prefix}.service.some_func',
-            line_number_where_func_executed=4,
+            path_to_func_in_executable_module=f'{PLAYGROUND_PATH_PREFIX}.service.some_func',
+            line_number_where_func_executed=5,
             decorator_inner_func=decorator_inner_func,
             is_method=False,
         )
@@ -81,12 +63,25 @@ class TestFuncPathcher:
             from func_call_patcher.pytests.playground.package2 import service    # noqa
             assert_file_not_exists()
 
-    def test_inside_method(self, file_deleter, playground_path_prefix):
+    def test_case2(self, file_deleter, PLAYGROUND_PATH_PREFIX):
         from func_call_patcher.pytests.playground.package2 import service
 
         func_call_patcher = FuncCallPatcher(
-            path_to_func_in_executable_module=f'{playground_path_prefix}.service.some_func',
-            line_number_where_func_executed=18,
+            path_to_func_in_executable_module=f'{PLAYGROUND_PATH_PREFIX}.service.some_func',
+            line_number_where_func_executed=13,
+            decorator_inner_func=decorator_inner_func,
+            is_method=False,
+        )
+        with func_call_patcher:
+            service.service_func()
+            assert_file_exists()
+
+    def test_case3(self, file_deleter, PLAYGROUND_PATH_PREFIX):
+        from func_call_patcher.pytests.playground.package2 import service
+
+        func_call_patcher = FuncCallPatcher(
+            path_to_func_in_executable_module=f'{PLAYGROUND_PATH_PREFIX}.service.some_func',
+            line_number_where_func_executed=21,
             decorator_inner_func=decorator_inner_func,
             is_method=False,
         )
@@ -95,12 +90,12 @@ class TestFuncPathcher:
             service.Some()
             assert_file_exists()
 
-    def test_inside_many_scopes(self, file_deleter, playground_path_prefix):
+    def test_case4(self, file_deleter, PLAYGROUND_PATH_PREFIX):
         from func_call_patcher.pytests.playground.package2 import service
 
         func_call_patcher = FuncCallPatcher(
-            path_to_func_in_executable_module=f'{playground_path_prefix}.service.some_func',
-            line_number_where_func_executed=25,
+            path_to_func_in_executable_module=f'{PLAYGROUND_PATH_PREFIX}.service.some_func',
+            line_number_where_func_executed=29,
             decorator_inner_func=decorator_inner_func,
             is_method=False,
         )
@@ -109,12 +104,12 @@ class TestFuncPathcher:
             service.another_service_func()()
             assert_file_exists()
 
-    def test_patch_classmethod(self, file_deleter, playground_path_prefix):
+    def test_case5(self, file_deleter, PLAYGROUND_PATH_PREFIX):
         from func_call_patcher.pytests.playground.package2 import service
 
         func_call_patcher = FuncCallPatcher(
-            path_to_func_in_executable_module=f'{playground_path_prefix}.service.Agreggator.execute',
-            line_number_where_func_executed=33,
+            path_to_func_in_executable_module=f'{PLAYGROUND_PATH_PREFIX}.service.Agreggator.execute',
+            line_number_where_func_executed=38,
             decorator_inner_func=decorator_inner_func,
             is_method=True,
         )
@@ -122,12 +117,12 @@ class TestFuncPathcher:
             service.classmethod_execute()
             assert_file_exists()
 
-    def test_patch_instancemethod(self, file_deleter, playground_path_prefix):
+    def test_case6(self, file_deleter, PLAYGROUND_PATH_PREFIX):
         from func_call_patcher.pytests.playground.package2 import service
 
         func_call_patcher = FuncCallPatcher(
-            path_to_func_in_executable_module=f'{playground_path_prefix}.service.RobotModel.get_passport_value',
-            line_number_where_func_executed=43,
+            path_to_func_in_executable_module=f'{PLAYGROUND_PATH_PREFIX}.service.RobotModel.get_passport_value',
+            line_number_where_func_executed=49,
             decorator_inner_func=decorator_inner_func,
             is_method=True,
         )
@@ -135,12 +130,12 @@ class TestFuncPathcher:
             service.instancemethod_execute()
             assert_file_exists()
 
-    def test_patch_inner_instancemethod(self, file_deleter, playground_path_prefix):
+    def test_case7(self, file_deleter, PLAYGROUND_PATH_PREFIX):
         from func_call_patcher.pytests.playground.package2 import service
 
         func_call_patcher = FuncCallPatcher(
-            path_to_func_in_executable_module=f'{playground_path_prefix}.service.RobotModel.get_passport_value',
-            line_number_where_func_executed=49,
+            path_to_func_in_executable_module=f'{PLAYGROUND_PATH_PREFIX}.service.RobotModel.get_passport_value',
+            line_number_where_func_executed=56,
             decorator_inner_func=decorator_inner_func,
             is_method=True,
         )
@@ -148,12 +143,12 @@ class TestFuncPathcher:
             service.instancemethod_execute2()
             assert_file_exists()
 
-    def test_patch_func_in_executed_module(self, file_deleter, playground_path_prefix):
+    def test_case8(self, file_deleter, PLAYGROUND_PATH_PREFIX):
         from func_call_patcher.pytests.playground.package2 import service
 
         func_call_patcher = FuncCallPatcher(
-            path_to_func_in_executable_module=f'{playground_path_prefix}.service.func_to_patch_in_executed_module',
-            line_number_where_func_executed=59,
+            path_to_func_in_executable_module=f'{PLAYGROUND_PATH_PREFIX}.service.func_to_patch_in_executed_module',
+            line_number_where_func_executed=67,
             decorator_inner_func=decorator_inner_func,
             is_method=False,
         )
@@ -161,19 +156,18 @@ class TestFuncPathcher:
             service.outer_func_to_patch_in_executed_module()
             assert_file_exists()
 
-    def test_patch_func_in_executed_module_in_the_same_class(self, file_deleter, playground_path_prefix):
+    def test_case9(self, file_deleter, PLAYGROUND_PATH_PREFIX):
         from func_call_patcher.pytests.playground.package2 import service
 
-        path = f'{playground_path_prefix}.service.SomeClass.func_to_patch_in_executed_module'
+        path = f'{PLAYGROUND_PATH_PREFIX}.service.SomeClass.func_to_patch_in_executed_module'
         func_call_patcher = FuncCallPatcher(
             path_to_func_in_executable_module=path,
-            line_number_where_func_executed=70,
+            line_number_where_func_executed=79,
             decorator_inner_func=decorator_inner_func,
             is_method=True,
         )
         with func_call_patcher:
             service.SomeClass().outer_func_to_patch_in_executed_module()
-            # TODO сделать чтобы заработал
             assert_file_exists()
 
 
@@ -182,19 +176,19 @@ class TestMultiFuncCallPatcher:
     def decorator_inner_func(func, func_args, func_kwargs, *args):
         return func(*func_args, **func_kwargs)
 
-    def test_patch(self, file_deleter, playground_path_prefix):
+    def test_patch(self, file_deleter, PLAYGROUND_PATH_PREFIX):
         from func_call_patcher.pytests.playground.package2 import service
 
         func_call_patchers = [
             FuncCallPatcher(
-                path_to_func_in_executable_module=f'{playground_path_prefix}.service.some_func',
-                line_number_where_func_executed=25,
+                path_to_func_in_executable_module=f'{PLAYGROUND_PATH_PREFIX}.service.some_func',
+                line_number_where_func_executed=29,
                 decorator_inner_func=decorator_inner_func,
                 is_method=False,
             ),
             FuncCallPatcher(
-                path_to_func_in_executable_module=f'{playground_path_prefix}.service.Agreggator.execute',
-                line_number_where_func_executed=33,
+                path_to_func_in_executable_module=f'{PLAYGROUND_PATH_PREFIX}.service.Agreggator.execute',
+                line_number_where_func_executed=38,
                 decorator_inner_func=decorator_inner_func,
                 is_method=True,
             ),
