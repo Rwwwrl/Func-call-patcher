@@ -170,6 +170,20 @@ class TestFuncCallPatcher:
             service.SomeClass().outer_func_to_patch_in_executed_module()
             assert_file_exists()
 
+    def test_case10(self, file_deleter, PLAYGROUND_PATH_PREFIX):
+        from func_call_patcher.pytests.playground.package2 import service
+
+        path = f'{PLAYGROUND_PATH_PREFIX}.service.Robot.value'
+        func_call_patcher = FuncCallPatcher(
+            path_to_func_in_executable_module=path,
+            line_number_where_func_executed=86,
+            decorator_inner_func=decorator_inner_func,
+            is_method=True,
+        )
+        with func_call_patcher:
+            service.case10()
+            assert_file_exists()
+
 
 class TestMultiFuncCallPatcher:
     @staticmethod
