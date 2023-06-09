@@ -69,7 +69,7 @@ class BasePatcher(IPatcher):
                 frame = frame.f_back
             return func(*args, **kwargs)
 
-        # помечаем функцию внутреннюю функцию как функция из func_call_patcher
+        # помечаем внутреннюю функцию как функция из func_call_patcher
         # это нужно для MethodPatcher._is_method_aready_patched
         setattr(inner, PATCHED_BY_FUNC_CALL_PATCHER_TAG, True)
         return inner
@@ -106,11 +106,12 @@ class FuncPatcher(BasePatcher):
         if self._is_func_already_patched(func=func_to_patch):
             self.data_container.does_func_need_a_patch = False
             return self
-        self.data_container.does_func_need_a_patch = True
+
         mock = Mock()
         setattr(mock, PATCHED_BY_FUNC_CALL_PATCHER_TAG, True)
         mock.side_effect = self._decorate_func_call(func=func_to_patch)
 
+        self.data_container.does_func_need_a_patch = True
         self.data_container.patcher = patch(self.path_to_func, mock)
         self.data_container.patcher.__enter__()
         return self
@@ -130,7 +131,7 @@ class MethodPatcherFacade(BasePatcher):
     def is_patched(self) -> bool:
         return hasattr(self, 'data_container') and self.data_container.patcher.data_container.does_need_a_patch
 
-    def _check_is_method(self, method):
+    def _is_method(self, method):
         return inspect.isfunction(method) or inspect.ismethod(method)
 
     def __enter__(self, *args, **kwargs):
@@ -149,7 +150,7 @@ class MethodPatcherFacade(BasePatcher):
             property_patcher.patch()
             self.data_container.patcher = property_patcher
 
-        if self._check_is_method(method=method):
+        if self._is_method(method=method):
             method_patcher = MethodPatcher(
                 class_obj=class_obj,
                 method=method,
@@ -191,8 +192,8 @@ class MethodPatcher:
             return None
 
         self.data_container.does_need_a_patch = True
-        setattr(self.class_obj, self.method_name, self.decorate_func_call(func=self.method))
         self.data_container.original_method = self.method
+        setattr(self.class_obj, self.method_name, self.decorate_func_call(func=self.method))
 
     def unpatch(self):
         if not self.data_container.does_need_a_patch:
@@ -228,13 +229,13 @@ class PropertyPatcher:
             return None
 
         self.data_container.does_need_a_patch = True
+        self.data_container.original_property = self.property_
         patched_property = property(
             fget=self.decorate_func_call(func=self.property_.fget),
             fset=self.property_.fset,
             fdel=self.property_.fdel,
         )
         setattr(self.class_obj, self.property_name, patched_property)
-        self.data_container.original_property = self.property_
 
     def unpatch(self):
         if not self.data_container.does_need_a_patch:

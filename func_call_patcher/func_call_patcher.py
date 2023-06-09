@@ -52,9 +52,9 @@ class FuncCallPatcher:
             return logic.some_func(x=10)    # номер линии 13
 
 
-        # TODO обновить
-        :param path_to_func_in_executable_module - полный путь до функции, которую мы хотим запатчить в запускаемом
-          модуле.
+        :param path_to_func - полный путь до функции, которую мы хотим запатчить. Путь нужно указывать точно также,
+            как указали бы используя patch.
+
             Из примера выше:
                 мы хотим запатчить функцию logic.some_func внутри service.service_func . В таком случае запускаемый
                 модуль это service.py, а полный путь до функции зависит от варианта импорта:
@@ -69,15 +69,20 @@ class FuncCallPatcher:
                     для 1-ого варианта это 5
                     для 2-ого варианта это 8
 
+        :param executable_module_name - имя файла с расширением '.py' внутри которого происходит вызов функции,
+         которую мы патчим.
+
         :param decorator_inner_func - функция, которая оборачивает вызов функции, которую мы патчим
             пример decorator_inner_func:
 
-            def decorator_inner_func(func, func_args, func_kwargs, frame: FrameType):
+            def decorator_inner_func(func, func_args, func_kwargs, frame, relationship_identifier):
                 :param func - это сама функция, которую мы патчим, как объект
                 :param func_args - позиционный аргументы, с которыми это функция бы запустилась
                 :param func_args - именованные аргументы, с которыми это функция бы запустилась
                 :param frame: FrameType - объект из types, который ранее определили в FuncCallPatcher, нужен если вдруг
                   нужна будет информация из него
+                :param relationship_identifier - идентификатор взаимосвязанности, значение равно значению, которое
+                  передали в FuncCallPatcher
 
         :param is_method - с помощью FuncCallPatcher можно запатчить не только вызов функции, но также и метода.
             логика тут та же: указываем полный путь до запускаемого модуля до класса и метода,
@@ -97,15 +102,15 @@ class FuncCallPatcher:
         from func_call_patcher import FuncCallPatcher
 
 
-        def decorator_inner_func(func, func_args, func_kwargs, frame):
+        def decorator_inner_func(func, func_args, func_kwargs, frame, relationship_identifier):
             print(f'func_args = {func_args}, func_kwargs = {func_kwargs}')
             return func(*func_args, **func_kwargs)
 
 
         func_call_patcher = FuncCallPatcher(
-            # path_to_func_in_executable_module='package2.service.some_func',
-            path_to_func_in_executable_module='package2.service.logic.some_func',
-            line_number_where_func_executed=13,
+            path_to_func='package2.service.some_func',
+            line_number_where_func_executed=5,
+            executable_module_name='service.py',
             decorator_inner_func=decorator_inner_func,
             is_method=False,
         )
