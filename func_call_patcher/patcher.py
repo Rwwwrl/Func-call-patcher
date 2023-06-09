@@ -14,6 +14,10 @@ from .import_tool import ImportTool
 PATCHED_BY_FUNC_CALL_PATCHER_TAG = '_patched_by_func_call_patcher'
 
 
+def get_method_name_from_path(path_to_func: str):
+    return path_to_func.split('.')[-1]
+
+
 class IPatcher(abc.ABC):
     @abc.abstractmethod
     def __init__(
@@ -131,11 +135,15 @@ class MethodPatcherFacade(BasePatcher):
 
     def __enter__(self, *args, **kwargs):
         class_obj, method = ImportTool.import_class_and_method_from_string(path_to_func=self.path_to_func)
+        method_name = get_method_name_from_path(path_to_func=self.path_to_func)
+        # в общем случае method.__name__ != method_name, например если на method навещан декоратор без wraps
+        # нам нужен именно "настоящий" method_name из пути до функции
         self.data_container = self.DataContainer()
         if isinstance(method, property):
             property_patcher = PropertyPatcher(
                 class_obj=class_obj,
                 property_=method,
+                property_name=method_name,
                 decorate_func_call=self._decorate_func_call,
             )
             property_patcher.patch()
@@ -145,6 +153,7 @@ class MethodPatcherFacade(BasePatcher):
             method_patcher = MethodPatcher(
                 class_obj=class_obj,
                 method=method,
+                method_name=method_name,
                 decorate_func_call=self._decorate_func_call,
             )
             method_patcher.patch()
@@ -160,9 +169,16 @@ class MethodPatcher:
         does_need_a_patch: bool = field(init=False)
         original_method: Callable = field(init=False)
 
-    def __init__(self, class_obj: type, method: Callable, decorate_func_call: Callable):
+    def __init__(
+        self,
+        class_obj: type,
+        method: Callable,
+        method_name: str,
+        decorate_func_call: Callable,
+    ):
         self.class_obj = class_obj
         self.method = method
+        self.method_name = method_name
         self.decorate_func_call = decorate_func_call
         self.data_container = self.DataContainer()
 
@@ -175,7 +191,7 @@ class MethodPatcher:
             return None
 
         self.data_container.does_need_a_patch = True
-        setattr(self.class_obj, self.method.__name__, self.decorate_func_call(func=self.method))
+        setattr(self.class_obj, self.method_name, self.decorate_func_call(func=self.method))
         self.data_container.original_method = self.method
 
     def unpatch(self):
@@ -184,7 +200,7 @@ class MethodPatcher:
 
         setattr(
             self.class_obj,
-            self.data_container.original_method.__name__,
+            self.method_name,
             self.data_container.original_method,
         )
         return
@@ -196,9 +212,10 @@ class PropertyPatcher:
         does_need_a_patch: bool = field(init=False)
         original_property: property = field(init=False)
 
-    def __init__(self, class_obj: type, property_: property, decorate_func_call: Callable):
+    def __init__(self, class_obj: type, property_: property, property_name: str, decorate_func_call: Callable):
         self.class_obj = class_obj
         self.property_ = property_
+        self.property_name = property_name
         self.decorate_func_call = decorate_func_call
         self.data_container = self.DataContainer()
 
@@ -216,7 +233,7 @@ class PropertyPatcher:
             fset=self.property_.fset,
             fdel=self.property_.fdel,
         )
-        setattr(self.class_obj, self.property_.fget.__name__, patched_property)
+        setattr(self.class_obj, self.property_name, patched_property)
         self.data_container.original_property = self.property_
 
     def unpatch(self):
@@ -225,7 +242,7 @@ class PropertyPatcher:
 
         setattr(
             self.class_obj,
-            self.property_.fget.__name__,
+            self.property_name,
             self.data_container.original_property,
         )
         return
