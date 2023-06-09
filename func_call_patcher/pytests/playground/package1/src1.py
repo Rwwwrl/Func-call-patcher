@@ -1,4 +1,4 @@
-from .second_logic import Dependency
+from .src2 import Dependency
 
 
 def some_func(x=None) -> int:
