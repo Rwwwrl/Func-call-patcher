@@ -62,7 +62,7 @@ class TestFuncCallPatcher:
         func_call_patcher = FuncCallPatcher(
             path_to_func=f'{PACKAGE2_PATH}.service.some_func',
             executable_module_name='service.py',
-            line_number_where_func_executed=5,
+            line_number_where_func_executed=6,
             decorator_inner_func=decorator_inner_func,
             is_method=False,
         )
@@ -76,7 +76,7 @@ class TestFuncCallPatcher:
         func_call_patcher = FuncCallPatcher(
             path_to_func=f'{PACKAGE2_PATH}.service.some_func',
             executable_module_name='service.py',
-            line_number_where_func_executed=19,
+            line_number_where_func_executed=20,
             decorator_inner_func=decorator_inner_func,
             is_method=False,
         )
@@ -95,7 +95,7 @@ class TestFuncCallPatcher:
         func_call_patcher = FuncCallPatcher(
             path_to_func=f'{PACKAGE2_PATH}.service.some_func',
             executable_module_name='service.py',
-            line_number_where_func_executed=27,
+            line_number_where_func_executed=28,
             decorator_inner_func=decorator_inner_func,
             is_method=False,
         )
@@ -115,7 +115,7 @@ class TestFuncCallPatcher:
         func_call_patcher = FuncCallPatcher(
             path_to_func=f'{PACKAGE2_PATH}.service.some_func',
             executable_module_name='service.py',
-            line_number_where_func_executed=35,
+            line_number_where_func_executed=36,
             decorator_inner_func=decorator_inner_func,
             is_method=False,
         )
@@ -135,7 +135,7 @@ class TestFuncCallPatcher:
         func_call_patcher = FuncCallPatcher(
             path_to_func=f'{PACKAGE2_PATH}.service.Agreggator.some_classmethod',
             executable_module_name='service.py',
-            line_number_where_func_executed=44,
+            line_number_where_func_executed=45,
             decorator_inner_func=decorator_inner_func,
             is_method=True,
         )
@@ -154,7 +154,7 @@ class TestFuncCallPatcher:
         func_call_patcher = FuncCallPatcher(
             path_to_func=f'{PACKAGE2_PATH}.service.RobotModel.get_passport_value',
             executable_module_name='service.py',
-            line_number_where_func_executed=55,
+            line_number_where_func_executed=56,
             decorator_inner_func=decorator_inner_func,
             is_method=True,
         )
@@ -173,7 +173,7 @@ class TestFuncCallPatcher:
         func_call_patcher = FuncCallPatcher(
             path_to_func=f'{PACKAGE2_PATH}.service.RobotModel.get_passport_value',
             executable_module_name='service.py',
-            line_number_where_func_executed=62,
+            line_number_where_func_executed=63,
             decorator_inner_func=decorator_inner_func,
             is_method=True,
         )
@@ -192,7 +192,7 @@ class TestFuncCallPatcher:
         func_call_patcher = FuncCallPatcher(
             path_to_func=f'{PACKAGE2_PATH}.service.func_to_patch_in_executed_module',
             executable_module_name='service.py',
-            line_number_where_func_executed=73,
+            line_number_where_func_executed=74,
             decorator_inner_func=decorator_inner_func,
             is_method=False,
         )
@@ -212,7 +212,7 @@ class TestFuncCallPatcher:
         func_call_patcher = FuncCallPatcher(
             path_to_func=path,
             executable_module_name='service.py',
-            line_number_where_func_executed=85,
+            line_number_where_func_executed=86,
             decorator_inner_func=decorator_inner_func,
             is_method=True,
         )
@@ -232,7 +232,7 @@ class TestFuncCallPatcher:
         func_call_patcher = FuncCallPatcher(
             path_to_func=path,
             executable_module_name='service.py',
-            line_number_where_func_executed=92,
+            line_number_where_func_executed=93,
             decorator_inner_func=decorator_inner_func,
             is_method=True,
         )
@@ -251,7 +251,7 @@ class TestFuncCallPatcher:
         func_call_patcher = FuncCallPatcher(
             path_to_func=f'{PACKAGE1_PATH}.second_logic.Dependency.some_property',
             executable_module_name='service.py',
-            line_number_where_func_executed=99,
+            line_number_where_func_executed=100,
             decorator_inner_func=decorator_inner_func,
             is_method=True,
         )
@@ -270,7 +270,7 @@ class TestFuncCallPatcher:
         func_call_patcher = FuncCallPatcher(
             path_to_func=f'{PACKAGE1_PATH}.second_logic.Dependency.some_method',
             executable_module_name='service.py',
-            line_number_where_func_executed=106,
+            line_number_where_func_executed=107,
             decorator_inner_func=decorator_inner_func,
             is_method=True,
         )
@@ -289,7 +289,7 @@ class TestFuncCallPatcher:
         func_call_patcher = FuncCallPatcher(
             path_to_func=f'{PACKAGE2_PATH}.service.Agreggator.some_statitcmethod',
             executable_module_name='service.py',
-            line_number_where_func_executed=113,
+            line_number_where_func_executed=114,
             decorator_inner_func=decorator_inner_func,
             is_method=True,
         )
@@ -308,7 +308,7 @@ class TestFuncCallPatcher:
         func_call_patcher = FuncCallPatcher(
             path_to_func=f'{PACKAGE2_PATH}.service.Agreggator.some_method_with_decorator_on_it',
             executable_module_name='service.py',
-            line_number_where_func_executed=120,
+            line_number_where_func_executed=121,
             decorator_inner_func=decorator_inner_func,
             is_method=True,
         )
@@ -327,7 +327,7 @@ class TestFuncCallPatcher:
         func_call_patcher = FuncCallPatcher(
             path_to_func=f'{PACKAGE2_PATH}.service.Agreggator.some_property_with_decorator_on_it',
             executable_module_name='service.py',
-            line_number_where_func_executed=127,
+            line_number_where_func_executed=128,
             decorator_inner_func=decorator_inner_func,
             is_method=True,
         )
@@ -338,6 +338,25 @@ class TestFuncCallPatcher:
         # проверяем, что патч спадет после выхода из контекстного менеджера
         delete_file()
         service.case15()
+        assert_file_not_exists()
+
+    def test_case16(self, file_deleter, PACKAGE2_PATH):
+        from func_call_patcher.pytests.playground.package2 import service
+
+        func_call_patcher = FuncCallPatcher(
+            path_to_func=f'{PACKAGE2_PATH}.service.some_func_with_decorator_on_it',
+            executable_module_name='service.py',
+            line_number_where_func_executed=135,
+            decorator_inner_func=decorator_inner_func,
+            is_method=False,
+        )
+        with func_call_patcher:
+            service.case16()
+            assert_file_exists()
+
+        # проверяем, что патч спадет после выхода из контекстного менеджера
+        delete_file()
+        service.case16()
         assert_file_not_exists()
 
 
@@ -353,14 +372,14 @@ class TestMultiFuncCallPatcher:
             FuncCallPatcher(
                 path_to_func=f'{PACKAGE2_PATH}.service.some_func',
                 executable_module_name='service.py',
-                line_number_where_func_executed=35,
+                line_number_where_func_executed=36,
                 decorator_inner_func=decorator_inner_func,
                 is_method=False,
             ),
             FuncCallPatcher(
                 path_to_func=f'{PACKAGE2_PATH}.service.Agreggator.some_classmethod',
                 executable_module_name='service.py',
-                line_number_where_func_executed=44,
+                line_number_where_func_executed=45,
                 decorator_inner_func=decorator_inner_func,
                 is_method=True,
             ),

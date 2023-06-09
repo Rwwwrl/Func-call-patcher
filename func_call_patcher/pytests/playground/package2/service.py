@@ -4,6 +4,7 @@ from func_call_patcher.pytests.playground.package1.logic import (
     RobotModel,
     SecondAggregator,
     some_func,
+    some_func_with_decorator_on_it,
 )
 
 # КЕЙС 1
@@ -125,3 +126,10 @@ def case15():
     # что патчим: Agreggator.some_property_with_decorator_on_it
     # проверка юз кейса, что декоратор на свойстве не повлияет на работу патча
     return Agreggator().some_property_with_decorator_on_it
+
+
+def case16():
+    # КЕЙС 16
+    # что патчим: some_func_with_decorator_on_it
+    # проверка юз кейса, что декоратор на функции никак не повлияет на работу патча
+    return some_func_with_decorator_on_it()

@@ -14,7 +14,7 @@ from .import_tool import ImportTool
 PATCHED_BY_FUNC_CALL_PATCHER_TAG = '_patched_by_func_call_patcher'
 
 
-def get_method_name_from_path(path_to_func: str):
+def get_func_name_from_path(path_to_func: str):
     return path_to_func.split('.')[-1]
 
 
@@ -135,7 +135,7 @@ class MethodPatcherFacade(BasePatcher):
 
     def __enter__(self, *args, **kwargs):
         class_obj, method = ImportTool.import_class_and_method_from_string(path_to_func=self.path_to_func)
-        method_name = get_method_name_from_path(path_to_func=self.path_to_func)
+        method_name = get_func_name_from_path(path_to_func=self.path_to_func)
         # в общем случае method.__name__ != method_name, например если на method навещан декоратор без wraps
         # нам нужен именно "настоящий" method_name из пути до функции
         self.data_container = self.DataContainer()

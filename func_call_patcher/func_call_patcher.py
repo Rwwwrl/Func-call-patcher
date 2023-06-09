@@ -9,7 +9,6 @@ class FuncCallPatcher:
     def __init__(
         self,
         path_to_func: str,
-    # TODO написать валидатор на это поле
         executable_module_name: str,
         line_number_where_func_executed: int,
         decorator_inner_func: hints.DecoratorInnerFunc,

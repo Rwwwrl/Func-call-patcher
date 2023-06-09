@@ -12,6 +12,11 @@ def any_decorator(func):
     return inner
 
 
+@any_decorator
+def some_func_with_decorator_on_it():
+    return 10
+
+
 class Agreggator:
     @classmethod
     def some_classmethod(cls) -> int:
