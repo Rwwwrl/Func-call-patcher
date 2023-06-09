@@ -261,7 +261,7 @@ class TestFuncCallPatcher:
 
         # проверяем, что патч спадет после выхода из контекстного менеджера
         delete_file()
-        service.case10()
+        service.case11()
         assert_file_not_exists()
 
     def test_case12(self, file_deleter, PACKAGE1_PATH):
@@ -280,7 +280,7 @@ class TestFuncCallPatcher:
 
         # проверяем, что патч спадет после выхода из контекстного менеджера
         delete_file()
-        service.case10()
+        service.case12()
         assert_file_not_exists()
 
     def test_case13(self, file_deleter, PACKAGE2_PATH):
@@ -300,6 +300,44 @@ class TestFuncCallPatcher:
         # проверяем, что патч спадет после выхода из контекстного менеджера
         delete_file()
         service.case13()
+        assert_file_not_exists()
+
+    def test_case14(self, file_deleter, PACKAGE2_PATH):
+        from func_call_patcher.pytests.playground.package2 import service
+
+        func_call_patcher = FuncCallPatcher(
+            path_to_func=f'{PACKAGE2_PATH}.service.Agreggator.some_method_with_decorator_on_it',
+            executable_module_name='service.py',
+            line_number_where_func_executed=120,
+            decorator_inner_func=decorator_inner_func,
+            is_method=True,
+        )
+        with func_call_patcher:
+            service.case14()
+            assert_file_exists()
+
+        # проверяем, что патч спадет после выхода из контекстного менеджера
+        delete_file()
+        service.case14()
+        assert_file_not_exists()
+
+    def test_case15(self, file_deleter, PACKAGE2_PATH):
+        from func_call_patcher.pytests.playground.package2 import service
+
+        func_call_patcher = FuncCallPatcher(
+            path_to_func=f'{PACKAGE2_PATH}.service.Agreggator.some_property_with_decorator_on_it',
+            executable_module_name='service.py',
+            line_number_where_func_executed=127,
+            decorator_inner_func=decorator_inner_func,
+            is_method=True,
+        )
+        with func_call_patcher:
+            service.case15()
+            assert_file_exists()
+
+        # проверяем, что патч спадет после выхода из контекстного менеджера
+        delete_file()
+        service.case15()
         assert_file_not_exists()
 
 

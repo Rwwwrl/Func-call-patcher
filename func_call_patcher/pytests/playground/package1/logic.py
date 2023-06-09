@@ -5,6 +5,13 @@ def some_func(x=None) -> int:
     return 10
 
 
+def any_decorator(func):
+    def inner(*args, **kwargs):
+        return func(*args, **kwargs)
+
+    return inner
+
+
 class Agreggator:
     @classmethod
     def some_classmethod(cls) -> int:
@@ -12,6 +19,15 @@ class Agreggator:
 
     @staticmethod
     def some_statitcmethod() -> int:
+        return 10
+
+    @any_decorator
+    def some_method_with_decorator_on_it(self) -> int:
+        return 10
+
+    @property
+    @any_decorator
+    def some_property_with_decorator_on_it(self) -> int:
         return 10
 
 

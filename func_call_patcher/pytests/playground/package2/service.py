@@ -109,5 +109,19 @@ def case12():
 def case13():
     # КЕЙС 13
     # что патчим: Agreggator.some_statitcmethod
-    # проверка юз кейса, когда логика (.execute) является или @staticmethod
+    # проверка юз кейса, когда логика (.some_statitcmethod) является или @staticmethod
     return Agreggator.some_statitcmethod()
+
+
+def case14():
+    # КЕЙС 14
+    # что патчим: Agreggator.some_statitcmethod
+    # проверка юз кейса, что декоратор на методе не повлияет на работу патча
+    return Agreggator().some_method_with_decorator_on_it()
+
+
+def case15():
+    # КЕЙС 15
+    # что патчим: Agreggator.some_property_with_decorator_on_it
+    # проверка юз кейса, что декоратор на свойстве не повлияет на работу патча
+    return Agreggator().some_property_with_decorator_on_it
