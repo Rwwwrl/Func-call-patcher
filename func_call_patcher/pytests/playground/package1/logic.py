@@ -18,3 +18,7 @@ class Robot:
 
     def get_value(self) -> int:
         return self.robot_model.get_passport_value(x=10)
+
+    @property
+    def value(self) -> int:
+        return 10

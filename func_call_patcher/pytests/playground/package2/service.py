@@ -77,3 +77,10 @@ class SomeClass:
         # проверка юз кейса, когда логика (.func_to_patch_in_executed_module) в самом запускаемом модуле,
         # в том же классе
         return self.func_to_patch_in_executed_module()
+
+
+def case10():
+    # КЕЙС 9
+    # что патчим: Robot.value
+    # проверка юз кейса, где что мы патчим является свойством
+    return robot.value

@@ -1,8 +1,11 @@
 import abc
 import functools
+import inspect
 import os
 import sys
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
+
+from attrs import define, field
 
 from mock import Mock, patch
 
@@ -46,11 +49,6 @@ def compare_paths(frame_path: str, abc_path_to_executable_module: str) -> bool:
     splitted_abc_path = abc_path_to_executable_module.split(os.sep)
     abc_path_to_executable_module = os.sep.join(splitted_abc_path[:-1]) + '.py'
     return frame_path.endswith(abc_path_to_executable_module)
-
-
-class DataContainer:
-    """нужен для переноса данных между __enter__ и __exit__, которые не хотелось бы хранить в self"""
-    pass
 
 
 class IPatcher(abc.ABC):
@@ -111,6 +109,11 @@ class BasePatcher(IPatcher):
         setattr(inner, PATCHED_BY_FUNC_CALL_PATCHER_TAG, True)
         return inner
 
+    @property
+    @abc.abstractmethod
+    def is_patched(self) -> bool:
+        raise NotImplementedError
+
     def __enter__(self, *args, **kwargs):
         raise NotImplementedError
 
@@ -119,14 +122,23 @@ class BasePatcher(IPatcher):
 
 
 class FuncPatcher(BasePatcher):
+    @define
+    class DataContainer:
+        does_func_need_a_patch: bool = field(init=False)
+        patcher = field(init=False)
+
     def _is_func_already_patched(self, func) -> bool:
         return isinstance(func, Mock) and hasattr(func, PATCHED_BY_FUNC_CALL_PATCHER_TAG)
+
+    @property
+    def is_patched(self) -> bool:
+        return hasattr(self, 'data_container') and self.data_container.does_func_need_a_patch
 
     def __enter__(self, *args, **kwargs):
         func_to_patch = ImportTool.import_func_from_string(
             path_to_func_in_executable_module=self.path_to_func_in_executable_module,
         )
-        self.data_container = DataContainer()
+        self.data_container = self.DataContainer()
 
         if self._is_func_already_patched(func=func_to_patch):
             self.data_container.does_func_need_a_patch = False
@@ -146,30 +158,113 @@ class FuncPatcher(BasePatcher):
         self.data_container.patcher.__exit__(*args, **kwargs)
 
 
-class MethodPatcher(BasePatcher):
-    def _is_method_aready_patched(self, method) -> bool:
-        return hasattr(method, PATCHED_BY_FUNC_CALL_PATCHER_TAG)
+class MethodPatcherFacade(BasePatcher):
+    @define
+    class DataContainer:
+        patcher: Union['MethodPatcher', 'PropertyPatcher'] = field(init=False)
+
+    @property
+    def is_patched(self) -> bool:
+        return hasattr(self, 'data_container') and self.data_container.patcher.data_container.does_need_a_patch
 
     def __enter__(self, *args, **kwargs):
         class_obj, method = ImportTool.import_class_and_method_from_string(
             path_to_func_in_executable_module=self.path_to_func_in_executable_module,
         )
-        self.data_container = DataContainer()
-
-        if self._is_method_aready_patched(method=method):
-            self.data_container.does_method_need_a_patch = False
-            return self
-
-        setattr(class_obj, method.__name__, self._decorate_func_call(func=method))
-        self.data_container.does_method_need_a_patch = True
-        self.data_container.original_method = method
-        self.data_container.class_obj = class_obj
+        self.data_container = self.DataContainer()
+        if isinstance(method, property):
+            property_patcher = PropertyPatcher(
+                class_obj=class_obj,
+                property_=method,
+                decorate_func_call=self._decorate_func_call,
+            )
+            property_patcher.patch()
+            self.data_container.patcher = property_patcher
+        if inspect.isfunction(method):
+            method_patcher = MethodPatcher(
+                class_obj=class_obj,
+                method=method,
+                decorate_func_call=self._decorate_func_call,
+            )
+            method_patcher.patch()
+            self.data_container.patcher = method_patcher
 
     def __exit__(self, *args, **kwargs):
-        if not self.data_container.does_method_need_a_patch:
+        self.data_container.patcher.unpatch()
+
+
+class MethodPatcher:
+    @define
+    class DataContainer:
+        does_need_a_patch: bool = field(init=False)
+        original_method: Callable = field(init=False)
+
+    def __init__(self, class_obj: type, method: Callable, decorate_func_call: Callable):
+        self.class_obj = class_obj
+        self.method = method
+        self.decorate_func_call = decorate_func_call
+        self.data_container = self.DataContainer()
+
+    def _is_method_aready_patched(self) -> bool:
+        return hasattr(self.method, PATCHED_BY_FUNC_CALL_PATCHER_TAG)
+
+    def patch(self) -> None:
+        if self._is_method_aready_patched():
+            self.data_container.does_need_a_patch = False
+            return None
+
+        self.data_container.does_need_a_patch = True
+        setattr(self.class_obj, self.method.__name__, self.decorate_func_call(func=self.method))
+        self.data_container.original_method = self.method
+
+    def unpatch(self):
+        if not self.data_container.does_need_a_patch:
             return
+
         setattr(
-            self.data_container.class_obj,
+            self.class_obj,
             self.data_container.original_method.__name__,
             self.data_container.original_method,
         )
+        return
+
+
+class PropertyPatcher:
+    @define
+    class DataContainer:
+        does_need_a_patch: bool = field(init=False)
+        original_property: property = field(init=False)
+
+    def __init__(self, class_obj: type, property_: property, decorate_func_call: Callable):
+        self.class_obj = class_obj
+        self.property_ = property_
+        self.decorate_func_call = decorate_func_call
+        self.data_container = self.DataContainer()
+
+    def _is_property_already_patched(self) -> bool:
+        return hasattr(self.property_.fget, PATCHED_BY_FUNC_CALL_PATCHER_TAG)
+
+    def patch(self) -> None:
+        if self._is_property_already_patched():
+            self.data_container.does_need_a_patch = False
+            return None
+
+        self.data_container.does_need_a_patch = True
+        patched_property = property(
+            fget=self.decorate_func_call(func=self.property_.fget),
+            fset=self.property_.fset,
+            fdel=self.property_.fdel,
+        )
+        setattr(self.class_obj, self.property_.fget.__name__, patched_property)
+        self.data_container.original_property = self.property_
+
+    def unpatch(self):
+        if not self.data_container.does_need_a_patch:
+            return
+
+        setattr(
+            self.class_obj,
+            self.property_.fget.__name__,
+            self.data_container.original_property,
+        )
+        return
