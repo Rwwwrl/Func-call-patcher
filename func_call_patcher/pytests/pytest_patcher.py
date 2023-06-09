@@ -26,8 +26,8 @@ class TestFuncPatcher:
         )
         with func_call_patcher:
             with same_func_call_patcher:
-                assert func_call_patcher._patcher.data_container.does_func_need_a_patch is True
-                assert same_func_call_patcher._patcher.data_container.does_func_need_a_patch is False
+                assert func_call_patcher._patcher.is_patched is True
+                assert same_func_call_patcher._patcher.is_patched is False
                 second_service.service_func()
 
 
@@ -52,8 +52,8 @@ class TestMethodPatcher:
         )
         with func_call_patcher:
             with same_func_call_patcher:
-                assert func_call_patcher._patcher.data_container.does_method_need_a_patch is True
-                assert same_func_call_patcher._patcher.data_container.does_method_need_a_patch is False
+                assert func_call_patcher._patcher.is_patched is True
+                assert same_func_call_patcher._patcher.is_patched is False
                 service.instancemethod_execute()
 
     def test_that_second_patcher_on_property_will_not_work(self, PLAYGROUND_PATH_PREFIX):
@@ -76,6 +76,6 @@ class TestMethodPatcher:
         )
         with func_call_patcher:
             with same_func_call_patcher:
-                assert func_call_patcher._patcher.data_container.does_method_need_a_patch is True
-                assert same_func_call_patcher._patcher.data_container.does_method_need_a_patch is False
+                assert func_call_patcher._patcher.is_patched is True
+                assert same_func_call_patcher._patcher.is_patched is False
                 service.instancemethod_execute()

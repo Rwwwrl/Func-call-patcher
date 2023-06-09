@@ -2,7 +2,7 @@ from typing import Optional
 from uuid import uuid4
 
 from . import hints
-from .patcher import FuncPatcher, MethodPatcher
+from .patcher import FuncPatcher, MethodPatcherFacade
 from .utils import Path
 
 
@@ -120,7 +120,7 @@ class FuncCallPatcher:
 
         if is_method:
             path = Path(path=path_to_func_in_executable_module, is_path_to_method=True)
-            self._patcher = MethodPatcher(
+            self._patcher = MethodPatcherFacade(
                 path_to_func_in_executable_module=path,
                 line_number_where_func_executed=line_number_where_func_executed,
                 decorator_inner_func=decorator_inner_func,
