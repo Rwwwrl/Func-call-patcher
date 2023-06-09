@@ -150,26 +150,56 @@ class MethodPatcher(BasePatcher):
     def _is_method_aready_patched(self, method) -> bool:
         return hasattr(method, PATCHED_BY_FUNC_CALL_PATCHER_TAG)
 
+    def _is_property_already_patched(self, method) -> bool:
+        return hasattr(method.fget, PATCHED_BY_FUNC_CALL_PATCHER_TAG)
+
     def __enter__(self, *args, **kwargs):
         class_obj, method = ImportTool.import_class_and_method_from_string(
             path_to_func_in_executable_module=self.path_to_func_in_executable_module,
         )
         self.data_container = DataContainer()
+        # TODO это разветвление нужно вынести
+        if isinstance(method, property):
+            if self._is_property_already_patched(method=method):
+                self.data_container.does_method_need_a_patch = False
+                return self
 
-        if self._is_method_aready_patched(method=method):
-            self.data_container.does_method_need_a_patch = False
-            return self
+            self.data_container.is_property = True
+            patched_property = property(
+                fget=self._decorate_func_call(func=method.fget),
+                fset=method.fset,
+                fdel=method.fdel,
+            )
+            setattr(class_obj, method.fget.__name__, patched_property)
+            self.data_container.original_property = method
 
-        setattr(class_obj, method.__name__, self._decorate_func_call(func=method))
+        else:
+            if self._is_method_aready_patched(method=method):
+                self.data_container.does_method_need_a_patch = False
+                return self
+
+            self.data_container.is_method = True
+            setattr(class_obj, method.__name__, self._decorate_func_call(func=method))
+            self.data_container.original_method = method
+
         self.data_container.does_method_need_a_patch = True
-        self.data_container.original_method = method
         self.data_container.class_obj = class_obj
 
     def __exit__(self, *args, **kwargs):
         if not self.data_container.does_method_need_a_patch:
             return
-        setattr(
-            self.data_container.class_obj,
-            self.data_container.original_method.__name__,
-            self.data_container.original_method,
-        )
+
+        if hasattr(self.data_container, 'is_property'):
+            setattr(
+                self.data_container.class_obj,
+                self.data_container.original_property.fget.__name__,
+                self.data_container.original_property,
+            )
+            return
+        elif hasattr(self.data_container, 'is_method'):
+            setattr(
+                self.data_container.class_obj,
+                self.data_container.original_method.__name__,
+                self.data_container.original_method,
+            )
+            return
