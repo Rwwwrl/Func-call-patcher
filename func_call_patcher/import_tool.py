@@ -14,15 +14,11 @@ class ImportTool:
         full_path_to_module = '.'.join(path_to_method_splitted[:-3])
         module_name, class_name, method_name = path_to_method_splitted[-3:]
 
-        try:
-            exec(f'from {full_path_to_module} import {class_name}')
-        except Exception:
-            exec(f'from {full_path_to_module} import {module_name}')
-            module_name = locals()[module_name]
-            class_obj = getattr(module_name, class_name)
-        else:
-            class_obj = locals()[class_name]
+        exec(f'from {full_path_to_module} import {module_name}')
+        module_name = locals()[module_name]
+        class_obj = getattr(module_name, class_name)
         method = getattr(class_obj, method_name)
+
         return class_obj, method
 
     @classmethod
@@ -38,14 +34,9 @@ class ImportTool:
         full_path_to_module = '.'.join(path_to_func_splitted[:-2])
         module_name, func_name = path_to_func_splitted[-2:]
 
-        try:
-            exec(f'from {full_path_to_module} import {func_name}')
-        except Exception:
-            exec(f'from {full_path_to_module} import {module_name}')
-            module = locals()[module_name]
-            func = getattr(module, func_name)
-        else:
-            func = locals()[func_name]
+        exec(f'from {full_path_to_module} import {module_name}')
+        module = locals()[module_name]
+        func = getattr(module, func_name)
 
         return func
 
