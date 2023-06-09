@@ -1,9 +1,17 @@
+from .second_logic import Dependency
+
+
 def some_func(x=None) -> int:
     return 10
 
 
 class Agreggator:
-    def execute() -> int:
+    @classmethod
+    def some_classmethod(cls) -> int:
+        return 10
+
+    @staticmethod
+    def some_statitcmethod() -> int:
         return 10
 
 
@@ -22,3 +30,8 @@ class Robot:
     @property
     def value(self) -> int:
         return 10
+
+
+class SecondAggregator:
+    def __init__(self):
+        self.depedency = Dependency()

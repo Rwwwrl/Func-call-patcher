@@ -1,4 +1,10 @@
-from func_call_patcher.pytests.playground.package1.logic import Agreggator, Robot, RobotModel, some_func
+from func_call_patcher.pytests.playground.package1.logic import (
+    Agreggator,
+    Robot,
+    RobotModel,
+    SecondAggregator,
+    some_func,
+)
 
 # КЕЙС 1
 # проверка юз кейса, когда логика (some_func) вызывается при чтении файла
@@ -33,9 +39,9 @@ def another_service_func():
 
 def classmethod_execute():
     # КЕЙС 5
-    # что патчим: Agreggator.execute
-    # проверка юз кейса, когда логика (.execute) является @classmethod или @staticmethod
-    return Agreggator.execute()
+    # что патчим: Agreggator.some_classmethod
+    # проверка юз кейса, когда логика (.execute) является @classmethod
+    return Agreggator.some_classmethod()
 
 
 robot_model = RobotModel()
@@ -80,7 +86,28 @@ class SomeClass:
 
 
 def case10():
-    # КЕЙС 9
+    # КЕЙС 10
     # что патчим: Robot.value
     # проверка юз кейса, где что мы патчим является свойством
     return robot.value
+
+
+def case11():
+    # КЕЙС 11
+    # что патчим: Dependency.some_property
+    # проверка юз кейса, где мы патчим свойство (по цепочке)
+    return SecondAggregator().depedency.some_property
+
+
+def case12():
+    # КЕЙС 12
+    # что патчим: Dependency.some_method
+    # проверка юз кейса, где мы патчим свойство (по цепочке)
+    return SecondAggregator().depedency.some_method(x=10, y=20)
+
+
+def case13():
+    # КЕЙС 13
+    # что патчим: Agreggator.some_statitcmethod
+    # проверка юз кейса, когда логика (.execute) является или @staticmethod
+    return Agreggator.some_statitcmethod()

@@ -3,13 +3,14 @@ from uuid import uuid4
 
 from . import hints
 from .patcher import FuncPatcher, MethodPatcherFacade
-from .utils import Path
 
 
 class FuncCallPatcher:
     def __init__(
         self,
-        path_to_func_in_executable_module: str,
+        path_to_func: str,
+    # TODO написать валидатор на это поле
+        executable_module_name: str,
         line_number_where_func_executed: int,
         decorator_inner_func: hints.DecoratorInnerFunc,
         is_method: bool,
@@ -52,6 +53,7 @@ class FuncCallPatcher:
             return logic.some_func(x=10)    # номер линии 13
 
 
+        # TODO обновить
         :param path_to_func_in_executable_module - полный путь до функции, которую мы хотим запатчить в запускаемом
           модуле.
             Из примера выше:
@@ -119,17 +121,17 @@ class FuncCallPatcher:
             relationship_identifier = uuid4()
 
         if is_method:
-            path = Path(path=path_to_func_in_executable_module, is_path_to_method=True)
             self._patcher = MethodPatcherFacade(
-                path_to_func_in_executable_module=path,
+                path_to_func=path_to_func,
+                executable_module_name=executable_module_name,
                 line_number_where_func_executed=line_number_where_func_executed,
                 decorator_inner_func=decorator_inner_func,
                 relationship_identifier=relationship_identifier,
             )
         else:
-            path = Path(path=path_to_func_in_executable_module, is_path_to_method=False)
             self._patcher = FuncPatcher(
-                path_to_func_in_executable_module=path,
+                path_to_func=path_to_func,
+                executable_module_name=executable_module_name,
                 line_number_where_func_executed=line_number_where_func_executed,
                 decorator_inner_func=decorator_inner_func,
                 relationship_identifier=relationship_identifier,
