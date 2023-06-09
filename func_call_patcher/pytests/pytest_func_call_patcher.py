@@ -51,6 +51,11 @@ class TestFuncCallPatcher:
             second_service.service_func()
             assert_file_exists()
 
+        # проверяем, что патч спадет после выхода из контекстного менеджера
+        delete_file()
+        second_service.service_func()
+        assert_file_not_exists()
+
     def test_case1(self, file_deleter, PLAYGROUND_PATH_PREFIX):
 
         func_call_patcher = FuncCallPatcher(
@@ -76,6 +81,11 @@ class TestFuncCallPatcher:
             service.service_func()
             assert_file_exists()
 
+        # проверяем, что патч спадет после выхода из контекстного менеджера
+        delete_file()
+        service.service_func()
+        assert_file_not_exists()
+
     def test_case3(self, file_deleter, PLAYGROUND_PATH_PREFIX):
         from func_call_patcher.pytests.playground.package2 import service
 
@@ -89,6 +99,11 @@ class TestFuncCallPatcher:
         with func_call_patcher:
             service.Some()
             assert_file_exists()
+
+        # проверяем, что патч спадет после выхода из контекстного менеджера
+        delete_file()
+        service.Some()
+        assert_file_not_exists()
 
     def test_case4(self, file_deleter, PLAYGROUND_PATH_PREFIX):
         from func_call_patcher.pytests.playground.package2 import service
@@ -104,6 +119,11 @@ class TestFuncCallPatcher:
             service.another_service_func()()
             assert_file_exists()
 
+        # проверяем, что патч спадет после выхода из контекстного менеджера
+        delete_file()
+        service.another_service_func()()
+        assert_file_not_exists()
+
     def test_case5(self, file_deleter, PLAYGROUND_PATH_PREFIX):
         from func_call_patcher.pytests.playground.package2 import service
 
@@ -116,6 +136,11 @@ class TestFuncCallPatcher:
         with func_call_patcher:
             service.classmethod_execute()
             assert_file_exists()
+
+        # проверяем, что патч спадет после выхода из контекстного менеджера
+        delete_file()
+        service.classmethod_execute()
+        assert_file_not_exists()
 
     def test_case6(self, file_deleter, PLAYGROUND_PATH_PREFIX):
         from func_call_patcher.pytests.playground.package2 import service
@@ -130,6 +155,11 @@ class TestFuncCallPatcher:
             service.instancemethod_execute()
             assert_file_exists()
 
+        # проверяем, что патч спадет после выхода из контекстного менеджера
+        delete_file()
+        service.instancemethod_execute()
+        assert_file_not_exists()
+
     def test_case7(self, file_deleter, PLAYGROUND_PATH_PREFIX):
         from func_call_patcher.pytests.playground.package2 import service
 
@@ -143,6 +173,11 @@ class TestFuncCallPatcher:
             service.instancemethod_execute2()
             assert_file_exists()
 
+        # проверяем, что патч спадет после выхода из контекстного менеджера
+        delete_file()
+        service.instancemethod_execute2()
+        assert_file_not_exists()
+
     def test_case8(self, file_deleter, PLAYGROUND_PATH_PREFIX):
         from func_call_patcher.pytests.playground.package2 import service
 
@@ -155,6 +190,11 @@ class TestFuncCallPatcher:
         with func_call_patcher:
             service.outer_func_to_patch_in_executed_module()
             assert_file_exists()
+
+        # проверяем, что патч спадет после выхода из контекстного менеджера
+        delete_file()
+        service.outer_func_to_patch_in_executed_module()
+        assert_file_not_exists()
 
     def test_case9(self, file_deleter, PLAYGROUND_PATH_PREFIX):
         from func_call_patcher.pytests.playground.package2 import service
@@ -170,6 +210,11 @@ class TestFuncCallPatcher:
             service.SomeClass().outer_func_to_patch_in_executed_module()
             assert_file_exists()
 
+        # проверяем, что патч спадет после выхода из контекстного менеджера
+        delete_file()
+        service.SomeClass().outer_func_to_patch_in_executed_module()
+        assert_file_not_exists()
+
     def test_case10(self, file_deleter, PLAYGROUND_PATH_PREFIX):
         from func_call_patcher.pytests.playground.package2 import service
 
@@ -183,6 +228,11 @@ class TestFuncCallPatcher:
         with func_call_patcher:
             service.case10()
             assert_file_exists()
+
+        # проверяем, что патч спадет после выхода из контекстного менеджера
+        delete_file()
+        service.case10()
+        assert_file_not_exists()
 
 
 class TestMultiFuncCallPatcher:
