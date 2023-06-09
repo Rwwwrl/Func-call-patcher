@@ -30,7 +30,7 @@ class TestFuncPatcher:
             with same_func_call_patcher:
                 assert func_call_patcher._patcher.is_patched is True
                 assert same_func_call_patcher._patcher.is_patched is False
-                second_service.service_func()
+                second_service.case_1()
 
 
 class TestMethodPatcher:

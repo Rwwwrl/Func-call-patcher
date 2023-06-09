@@ -38,7 +38,7 @@ def file_deleter():
 
 
 class TestFuncCallPatcher:
-    def test_case0(self, file_deleter, PACKAGE2_PATH):
+    def test_case_1(self, file_deleter, PACKAGE2_PATH):
         from func_call_patcher.pytests.playground.package2 import second_service
 
         func_call_patcher = FuncCallPatcher(
@@ -49,12 +49,31 @@ class TestFuncCallPatcher:
             is_method=False,
         )
         with func_call_patcher:
-            second_service.service_func()
+            second_service.case_1()
             assert_file_exists()
 
         # проверяем, что патч спадет после выхода из контекстного менеджера
         delete_file()
-        second_service.service_func()
+        second_service.case_1()
+        assert_file_not_exists()
+
+    def test_case_2(self, file_deleter, PACKAGE2_PATH):
+        from func_call_patcher.pytests.playground.package2 import second_service
+
+        func_call_patcher = FuncCallPatcher(
+            path_to_func=f'{PACKAGE2_PATH}.second_service.logic.Agreggator.some_classmethod',
+            executable_module_name='second_service.py',
+            line_number_where_func_executed=17,
+            decorator_inner_func=decorator_inner_func,
+            is_method=True,
+        )
+        with func_call_patcher:
+            second_service.case_2()
+            assert_file_exists()
+
+        # проверяем, что патч спадет после выхода из контекстного менеджера
+        delete_file()
+        second_service.case_2()
         assert_file_not_exists()
 
     def test_case1(self, file_deleter, PACKAGE2_PATH):
