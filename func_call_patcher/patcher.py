@@ -126,6 +126,9 @@ class MethodPatcherFacade(BasePatcher):
     def is_patched(self) -> bool:
         return hasattr(self, 'data_container') and self.data_container.patcher.data_container.does_need_a_patch
 
+    def _check_is_method(self, method):
+        return inspect.isfunction(method) or inspect.ismethod(method)
+
     def __enter__(self, *args, **kwargs):
         class_obj, method = ImportTool.import_class_and_method_from_string(path_to_func=self.path_to_func)
         self.data_container = self.DataContainer()
@@ -137,7 +140,8 @@ class MethodPatcherFacade(BasePatcher):
             )
             property_patcher.patch()
             self.data_container.patcher = property_patcher
-        if inspect.isfunction(method):
+
+        if self._check_is_method(method=method):
             method_patcher = MethodPatcher(
                 class_obj=class_obj,
                 method=method,
