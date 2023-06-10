@@ -45,7 +45,7 @@ class LineNumberValidator(IValidator):
 
     def validate(self) -> None:
         if self.obj <= 0:
-            raise LineNumberIsIncorrect(f"{self.obj} должно быть строго больше 0")
+            raise LineNumberIsIncorrect(f"{self.obj} должно > 0")
 
 
 class ExecutableModuleNameValidator(IValidator):
@@ -59,6 +59,8 @@ class ExecutableModuleNameValidator(IValidator):
             raise ExecutableModuleNameIsIncorrect('формат имени модуля должен быть: <filename>.py')
         if not filename:
             raise ExecutableModuleNameIsIncorrect('наименование файла не должно быть пустым')
+        if file_ext != '.py':
+            raise ExecutableModuleNameIsIncorrect('расширение файла должно быть ".py"')
 
 
 class FuncCanBeImportedValidator(IValidator):

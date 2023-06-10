@@ -131,31 +131,33 @@ class MethodPatcherFacade(BasePatcher):
     def is_patched(self) -> bool:
         return hasattr(self, 'data_container') and self.data_container.patcher.data_container.does_need_a_patch
 
-    def _is_method(self, method):
+    def _is_func(self, method):
         return inspect.isfunction(method) or inspect.ismethod(method)
 
     def __enter__(self, *args, **kwargs):
         class_obj, method = ImportTool.import_class_and_method_from_string(path_to_func=self.path_to_func)
-        method_name = get_func_name_from_path(path_to_func=self.path_to_func)
+
         # в общем случае method.__name__ != method_name, например если на method навещан декоратор без wraps
-        # нам нужен именно "настоящий" method_name из пути до функции
+        # нам нужен именно настоящее имя метода (= то, которое указано в объявлении метода).
+        method_name_from_path = get_func_name_from_path(path_to_func=self.path_to_func)
+
         self.data_container = self.DataContainer()
         if isinstance(method, property):
             property_patcher = PropertyPatcher(
                 class_obj=class_obj,
                 property_=method,
-                property_name=method_name,
+                property_name=method_name_from_path,
                 decorate_func_call=self._decorate_func_call,
             )
             property_patcher.patch()
             self.data_container.patcher = property_patcher
 
-        if self._is_method(method=method):
+        if self._is_func(method=method):
             method_patcher = MethodPatcher(
                 class_obj=class_obj,
                 method=method,
-                method_name=method_name,
-                decorate_func_call=self._decorate_func_call,
+                method_name=method_name_from_path,
+                decorate_func_call_func=self._decorate_func_call,
             )
             method_patcher.patch()
             self.data_container.patcher = method_patcher
@@ -175,12 +177,12 @@ class MethodPatcher:
         class_obj: type,
         method: Callable,
         method_name: str,
-        decorate_func_call: Callable,
+        decorate_func_call_func: Callable,
     ):
         self.class_obj = class_obj
         self.method = method
         self.method_name = method_name
-        self.decorate_func_call = decorate_func_call
+        self.decorate_func_call = decorate_func_call_func
         self.data_container = self.DataContainer()
 
     def _is_method_aready_patched(self) -> bool:
@@ -189,7 +191,7 @@ class MethodPatcher:
     def patch(self) -> None:
         if self._is_method_aready_patched():
             self.data_container.does_need_a_patch = False
-            return None
+            return
 
         self.data_container.does_need_a_patch = True
         self.data_container.original_method = self.method
@@ -204,7 +206,6 @@ class MethodPatcher:
             self.method_name,
             self.data_container.original_method,
         )
-        return
 
 
 class PropertyPatcher:
@@ -213,11 +214,17 @@ class PropertyPatcher:
         does_need_a_patch: bool = field(init=False)
         original_property: property = field(init=False)
 
-    def __init__(self, class_obj: type, property_: property, property_name: str, decorate_func_call: Callable):
+    def __init__(
+        self,
+        class_obj: type,
+        property_: property,
+        property_name: str,
+        decorate_func_call: Callable,
+    ):
         self.class_obj = class_obj
         self.property_ = property_
         self.property_name = property_name
-        self.decorate_func_call = decorate_func_call
+        self.decorate_func_call_func = decorate_func_call
         self.data_container = self.DataContainer()
 
     def _is_property_already_patched(self) -> bool:
@@ -226,12 +233,12 @@ class PropertyPatcher:
     def patch(self) -> None:
         if self._is_property_already_patched():
             self.data_container.does_need_a_patch = False
-            return None
+            return
 
         self.data_container.does_need_a_patch = True
         self.data_container.original_property = self.property_
         patched_property = property(
-            fget=self.decorate_func_call(func=self.property_.fget),
+            fget=self.decorate_func_call_func(func=self.property_.fget),
             fset=self.property_.fset,
             fdel=self.property_.fdel,
         )
@@ -246,4 +253,3 @@ class PropertyPatcher:
             self.property_name,
             self.data_container.original_property,
         )
-        return
