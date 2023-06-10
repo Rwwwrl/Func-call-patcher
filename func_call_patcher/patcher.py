@@ -1,7 +1,6 @@
 import abc
 import functools
 import inspect
-import os
 import sys
 from typing import Callable, Optional, Union
 
@@ -11,51 +10,20 @@ from mock import Mock, patch
 
 from . import hints
 from .import_tool import ImportTool
-from .utils import Path
 
 PATCHED_BY_FUNC_CALL_PATCHER_TAG = '_patched_by_func_call_patcher'
 
 
-def compare_paths(frame_path: str, abc_path_to_executable_module: str) -> bool:
-    """
-    функция отвечает на вопрос, является ли abc_path_to_module частью пути frame_path
-
-    Пример 1:
-        path1 = "/patch_funcs/func_call_patcher/playground/package2/second_service.py"
-        path2 = "playground/package2/second_service/logic.py"
-        являтся одними и теми же путями, просто в случае path2 мы делаем импорт вида
-             # second_service.py
-             from package import logic
-
-             logic.some_func()
-
-        compare_paths(path1, path2) -> True
-
-    Пример 2:
-        path1 = "/patch_funcs/func_call_patcher/playground/package2/second_service.py"
-        path2 = "playground/package2/second_service.py"
-        тут очиведно почему пути являются одними и теми же. В этом случае импорт выглядит как
-             # second_service.py
-             from package.logic import some_func
-
-             some_func()
-    """
-    # TODO скорее всего эту логику тем или иным образом надо внести в utils.Path
-
-    if frame_path.endswith(abc_path_to_executable_module):
-        return True
-
-    # если до сюда дошли, значит импорт выглядит как примере 1. Убираем из abc_path_to_module импортирумый модуль.
-    splitted_abc_path = abc_path_to_executable_module.split(os.sep)
-    abc_path_to_executable_module = os.sep.join(splitted_abc_path[:-1]) + '.py'
-    return frame_path.endswith(abc_path_to_executable_module)
+def get_func_name_from_path(path_to_func: str):
+    return path_to_func.split('.')[-1]
 
 
 class IPatcher(abc.ABC):
     @abc.abstractmethod
     def __init__(
         self,
-        path_to_func_in_executable_module: Path,
+        path_to_func: str,
+        executable_module_name: str,
         line_where_func_executed: int,
         decorator_inner_func: hints.DecoratorInnerFunc,
         relationship_identifier: Optional[hints.RelationshipIdentifier] = None,
@@ -74,19 +42,19 @@ class IPatcher(abc.ABC):
 class BasePatcher(IPatcher):
     def __init__(
         self,
-        path_to_func_in_executable_module: Path,
+        path_to_func: str,
+        executable_module_name: str,
         line_number_where_func_executed: int,
         decorator_inner_func: hints.DecoratorInnerFunc,
         relationship_identifier: Optional[hints.RelationshipIdentifier] = None,
     ):
-        self.path_to_func_in_executable_module = path_to_func_in_executable_module
+        self.path_to_func = path_to_func
         self.decorator_inner_func = decorator_inner_func
         self.line_where_func_executed = line_number_where_func_executed
+        self.executable_module_name = executable_module_name
         self.relationship_identifier = relationship_identifier
 
     def _decorate_func_call(self, func: Callable):
-        abc_path_to_executable_module = self.path_to_func_in_executable_module.abc_path_to_executable_module
-
         @functools.wraps(func)
         def inner(*args, **kwargs):
             frame = sys._getframe()
@@ -94,17 +62,14 @@ class BasePatcher(IPatcher):
                 full_path_of_module_in_executed_frame = frame.f_code.co_filename
                 if (
                     frame.f_lineno == self.line_where_func_executed and    # noqa
-                    compare_paths(
-                        frame_path=full_path_of_module_in_executed_frame,
-                        abc_path_to_executable_module=abc_path_to_executable_module,
-                    )
+                    full_path_of_module_in_executed_frame.endswith(self.executable_module_name)
                 ):
                     result = self.decorator_inner_func(func, args, kwargs, frame, self.relationship_identifier)
                     return result
                 frame = frame.f_back
             return func(*args, **kwargs)
 
-        # помечаем функцию внутреннюю функцию как функция из func_call_patcher
+        # помечаем внутреннюю функцию как функция из func_call_patcher
         # это нужно для MethodPatcher._is_method_aready_patched
         setattr(inner, PATCHED_BY_FUNC_CALL_PATCHER_TAG, True)
         return inner
@@ -135,20 +100,19 @@ class FuncPatcher(BasePatcher):
         return hasattr(self, 'data_container') and self.data_container.does_func_need_a_patch
 
     def __enter__(self, *args, **kwargs):
-        func_to_patch = ImportTool.import_func_from_string(
-            path_to_func_in_executable_module=self.path_to_func_in_executable_module,
-        )
+        func_to_patch = ImportTool.import_func_from_string(path_to_func=self.path_to_func)
         self.data_container = self.DataContainer()
 
         if self._is_func_already_patched(func=func_to_patch):
             self.data_container.does_func_need_a_patch = False
             return self
-        self.data_container.does_func_need_a_patch = True
+
         mock = Mock()
         setattr(mock, PATCHED_BY_FUNC_CALL_PATCHER_TAG, True)
         mock.side_effect = self._decorate_func_call(func=func_to_patch)
 
-        self.data_container.patcher = patch(self.path_to_func_in_executable_module.path, mock)
+        self.data_container.does_func_need_a_patch = True
+        self.data_container.patcher = patch(self.path_to_func, mock)
         self.data_container.patcher.__enter__()
         return self
 
@@ -167,24 +131,33 @@ class MethodPatcherFacade(BasePatcher):
     def is_patched(self) -> bool:
         return hasattr(self, 'data_container') and self.data_container.patcher.data_container.does_need_a_patch
 
+    def _is_func(self, method):
+        return inspect.isfunction(method) or inspect.ismethod(method)
+
     def __enter__(self, *args, **kwargs):
-        class_obj, method = ImportTool.import_class_and_method_from_string(
-            path_to_func_in_executable_module=self.path_to_func_in_executable_module,
-        )
+        class_obj, method = ImportTool.import_class_and_method_from_string(path_to_func=self.path_to_func)
+
+        # в общем случае method.__name__ != method_name, например если на method навещан декоратор без wraps
+        # нам нужен именно настоящее имя метода (= то, которое указано в объявлении метода).
+        method_name_from_path = get_func_name_from_path(path_to_func=self.path_to_func)
+
         self.data_container = self.DataContainer()
         if isinstance(method, property):
             property_patcher = PropertyPatcher(
                 class_obj=class_obj,
                 property_=method,
+                property_name=method_name_from_path,
                 decorate_func_call=self._decorate_func_call,
             )
             property_patcher.patch()
             self.data_container.patcher = property_patcher
-        if inspect.isfunction(method):
+
+        if self._is_func(method=method):
             method_patcher = MethodPatcher(
                 class_obj=class_obj,
                 method=method,
-                decorate_func_call=self._decorate_func_call,
+                method_name=method_name_from_path,
+                decorate_func_call_func=self._decorate_func_call,
             )
             method_patcher.patch()
             self.data_container.patcher = method_patcher
@@ -199,10 +172,17 @@ class MethodPatcher:
         does_need_a_patch: bool = field(init=False)
         original_method: Callable = field(init=False)
 
-    def __init__(self, class_obj: type, method: Callable, decorate_func_call: Callable):
+    def __init__(
+        self,
+        class_obj: type,
+        method: Callable,
+        method_name: str,
+        decorate_func_call_func: Callable,
+    ):
         self.class_obj = class_obj
         self.method = method
-        self.decorate_func_call = decorate_func_call
+        self.method_name = method_name
+        self.decorate_func_call = decorate_func_call_func
         self.data_container = self.DataContainer()
 
     def _is_method_aready_patched(self) -> bool:
@@ -211,11 +191,11 @@ class MethodPatcher:
     def patch(self) -> None:
         if self._is_method_aready_patched():
             self.data_container.does_need_a_patch = False
-            return None
+            return
 
         self.data_container.does_need_a_patch = True
-        setattr(self.class_obj, self.method.__name__, self.decorate_func_call(func=self.method))
         self.data_container.original_method = self.method
+        setattr(self.class_obj, self.method_name, self.decorate_func_call(func=self.method))
 
     def unpatch(self):
         if not self.data_container.does_need_a_patch:
@@ -223,10 +203,9 @@ class MethodPatcher:
 
         setattr(
             self.class_obj,
-            self.data_container.original_method.__name__,
+            self.method_name,
             self.data_container.original_method,
         )
-        return
 
 
 class PropertyPatcher:
@@ -235,10 +214,17 @@ class PropertyPatcher:
         does_need_a_patch: bool = field(init=False)
         original_property: property = field(init=False)
 
-    def __init__(self, class_obj: type, property_: property, decorate_func_call: Callable):
+    def __init__(
+        self,
+        class_obj: type,
+        property_: property,
+        property_name: str,
+        decorate_func_call: Callable,
+    ):
         self.class_obj = class_obj
         self.property_ = property_
-        self.decorate_func_call = decorate_func_call
+        self.property_name = property_name
+        self.decorate_func_call_func = decorate_func_call
         self.data_container = self.DataContainer()
 
     def _is_property_already_patched(self) -> bool:
@@ -247,16 +233,16 @@ class PropertyPatcher:
     def patch(self) -> None:
         if self._is_property_already_patched():
             self.data_container.does_need_a_patch = False
-            return None
+            return
 
         self.data_container.does_need_a_patch = True
+        self.data_container.original_property = self.property_
         patched_property = property(
-            fget=self.decorate_func_call(func=self.property_.fget),
+            fget=self.decorate_func_call_func(func=self.property_.fget),
             fset=self.property_.fset,
             fdel=self.property_.fdel,
         )
-        setattr(self.class_obj, self.property_.fget.__name__, patched_property)
-        self.data_container.original_property = self.property_
+        setattr(self.class_obj, self.property_name, patched_property)
 
     def unpatch(self):
         if not self.data_container.does_need_a_patch:
@@ -264,7 +250,6 @@ class PropertyPatcher:
 
         setattr(
             self.class_obj,
-            self.property_.fget.__name__,
+            self.property_name,
             self.data_container.original_property,
         )
-        return

@@ -5,13 +5,12 @@ from attrs import define
 
 from .exceptions import ItCannotBeImported
 from .import_tool import ImportTool
-from .utils import Path
 
 
 @define
 class PathData:
 
-    path_to_func_in_executable_module: Path
+    path_to_func: str
     is_method: bool
 
 
@@ -20,6 +19,10 @@ class BaseValidatationException(BaseException):
 
 
 class LineNumberIsIncorrect(BaseValidatationException):
+    pass
+
+
+class ExecutableModuleNameIsIncorrect(BaseValidatationException):
     pass
 
 
@@ -42,7 +45,22 @@ class LineNumberValidator(IValidator):
 
     def validate(self) -> None:
         if self.obj <= 0:
-            raise LineNumberIsIncorrect(f"{self.obj} должно быть строго больше 0")
+            raise LineNumberIsIncorrect(f"{self.obj} должно > 0")
+
+
+class ExecutableModuleNameValidator(IValidator):
+
+    obj: str
+
+    def validate(self) -> None:
+        try:
+            filename, file_ext = self.obj.split('.')
+        except ValueError:
+            raise ExecutableModuleNameIsIncorrect('формат имени модуля должен быть: <filename>.py')
+        if not filename:
+            raise ExecutableModuleNameIsIncorrect('наименование файла не должно быть пустым')
+        if file_ext != '.py':
+            raise ExecutableModuleNameIsIncorrect('расширение файла должно быть ".py"')
 
 
 class FuncCanBeImportedValidator(IValidator):
@@ -56,7 +74,7 @@ class FuncCanBeImportedValidator(IValidator):
             import_func = ImportTool.import_func_from_string
 
         try:
-            import_func(path_to_func_in_executable_module=self.obj.path_to_func_in_executable_module)
+            import_func(path_to_func=self.obj.path_to_func)
         except ItCannotBeImported:
             if self.obj.is_method:
                 func_type = 'метод'
@@ -66,7 +84,7 @@ class FuncCanBeImportedValidator(IValidator):
                 declension = 'импортированa'
             raise PathToFuncIsIncorrect(
                 f"""
-                {func_type} по пути '{self.obj.path_to_func_in_executable_module.path}' не может быть {declension},
+                {func_type} по пути '{self.obj.path_to_func.path}' не может быть {declension},
                 проверьте правильно ли вы указали путь.
                 """,
             )
@@ -74,20 +92,17 @@ class FuncCanBeImportedValidator(IValidator):
 
 def validate(
     line_number_where_func_executed: int,
-    path_to_func_in_executable_module: str,
+    executable_module_name: str,
+    path_to_func: str,
     is_method: bool,
 ):
     validators: List[IValidator] = [
         LineNumberValidator(obj=line_number_where_func_executed),
-        FuncCanBeImportedValidator(
-            obj=PathData(
-                path_to_func_in_executable_module=Path(
-                    path=path_to_func_in_executable_module,
-                    is_path_to_method=is_method,
-                ),
-                is_method=is_method,
-            ),
-        ),
+        FuncCanBeImportedValidator(obj=PathData(
+            path_to_func=path_to_func,
+            is_method=is_method,
+        )),
+        ExecutableModuleNameValidator(obj=executable_module_name),
     ]
 
     for validator in validators:

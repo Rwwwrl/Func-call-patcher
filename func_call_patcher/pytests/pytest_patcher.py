@@ -6,21 +6,23 @@ def decorator_inner_func(func, func_args, func_kwargs, frame, relationship_ident
 
 
 class TestFuncPatcher:
-    def test_that_second_patcher_will_not_work(self, PLAYGROUND_PATH_PREFIX):
+    def test_that_second_patcher_will_not_work(self, PACKAGE2_PATH):
         """
         тестируем, что второй патч на одну и ту же функцию не навесится
         """
-        from func_call_patcher.pytests.playground.package2 import second_service
+        from func_call_patcher.pytests.playground.package2 import use_casesX
 
         func_call_patcher = FuncCallPatcher(
-            path_to_func_in_executable_module=f'{PLAYGROUND_PATH_PREFIX}.second_service.logic.some_func',
-            line_number_where_func_executed=9,
+            path_to_func=f'{PACKAGE2_PATH}.use_casesX.some_func',
+            executable_module_name='use_casesX.py',
+            line_number_where_func_executed=30,
             decorator_inner_func=decorator_inner_func,
             is_method=False,
         )
         same_func_call_patcher = FuncCallPatcher(
-            path_to_func_in_executable_module=f'{PLAYGROUND_PATH_PREFIX}.second_service.logic.some_func',
-            line_number_where_func_executed=9,
+            path_to_func=f'{PACKAGE2_PATH}.use_casesX.some_func',
+            executable_module_name='use_casesX.py',
+            line_number_where_func_executed=30,
             decorator_inner_func=decorator_inner_func,
             is_method=False,
         )
@@ -28,25 +30,28 @@ class TestFuncPatcher:
             with same_func_call_patcher:
                 assert func_call_patcher._patcher.is_patched is True
                 assert same_func_call_patcher._patcher.is_patched is False
-                second_service.service_func()
+                use_casesX.Case2.run()
 
 
 class TestMethodPatcher:
-    def test_that_second_patcher_on_method_will_not_work(self, PLAYGROUND_PATH_PREFIX):
+    def test_that_second_patcher_on_method_will_not_work(self, PACKAGE2_PATH):
         """
         тестируем, что второй патч на один и тот же метод не навесится
         """
-        from func_call_patcher.pytests.playground.package2 import service
+        from func_call_patcher.pytests.playground.package2 import use_casesX
 
+        # use case 6
         func_call_patcher = FuncCallPatcher(
-            path_to_func_in_executable_module=f'{PLAYGROUND_PATH_PREFIX}.service.RobotModel.get_passport_value',
-            line_number_where_func_executed=49,
+            path_to_func=f'{PACKAGE2_PATH}.use_casesX.RobotModel.get_passport_value',
+            executable_module_name='use_casesX.py',
+            line_number_where_func_executed=73,
             decorator_inner_func=decorator_inner_func,
             is_method=True,
         )
         same_func_call_patcher = FuncCallPatcher(
-            path_to_func_in_executable_module=f'{PLAYGROUND_PATH_PREFIX}.service.RobotModel.get_passport_value',
-            line_number_where_func_executed=49,
+            path_to_func=f'{PACKAGE2_PATH}.use_casesX.RobotModel.get_passport_value',
+            executable_module_name='use_casesX.py',
+            line_number_where_func_executed=73,
             decorator_inner_func=decorator_inner_func,
             is_method=True,
         )
@@ -54,23 +59,25 @@ class TestMethodPatcher:
             with same_func_call_patcher:
                 assert func_call_patcher._patcher.is_patched is True
                 assert same_func_call_patcher._patcher.is_patched is False
-                service.instancemethod_execute()
+                use_casesX.Case6.run()
 
-    def test_that_second_patcher_on_property_will_not_work(self, PLAYGROUND_PATH_PREFIX):
+    def test_that_second_patcher_on_property_will_not_work(self, PACKAGE2_PATH):
         """
         тестируем, что второй патч на один и тот же метод не навесится
         """
-        from func_call_patcher.pytests.playground.package2 import service
+        from func_call_patcher.pytests.playground.package2 import use_casesX
 
         func_call_patcher = FuncCallPatcher(
-            path_to_func_in_executable_module=f'{PLAYGROUND_PATH_PREFIX}.service.Robot.value',
-            line_number_where_func_executed=86,
+            path_to_func=f'{PACKAGE2_PATH}.use_casesX.Robot.value',
+            executable_module_name='use_casesX.py',
+            line_number_where_func_executed=117,
             decorator_inner_func=decorator_inner_func,
             is_method=True,
         )
         same_func_call_patcher = FuncCallPatcher(
-            path_to_func_in_executable_module=f'{PLAYGROUND_PATH_PREFIX}.service.Robot.value',
-            line_number_where_func_executed=86,
+            path_to_func=f'{PACKAGE2_PATH}.use_casesX.Robot.value',
+            executable_module_name='use_casesX.py',
+            line_number_where_func_executed=117,
             decorator_inner_func=decorator_inner_func,
             is_method=True,
         )
@@ -78,4 +85,4 @@ class TestMethodPatcher:
             with same_func_call_patcher:
                 assert func_call_patcher._patcher.is_patched is True
                 assert same_func_call_patcher._patcher.is_patched is False
-                service.instancemethod_execute()
+                use_casesX.Case10.run()

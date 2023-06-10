@@ -2,14 +2,13 @@
 
 Задачей данного FuncPatcher`а является запатчить один конкретный вызов функции/метода в _запускаемом_ модуле.
 
-*запускаемый* модуль - модуль, в котором запускается функция/метод, которую мы хотим пропатчить
+_запускаемый_ модуль - модуль, в котором запускается функция/метод, которую мы хотим пропатчить
 
 Пример:
 
 Пусть у нас есть такая структура проекта
 
-```bash
-├── package1
+```bash ├── package1
 │   └── logic.py
 ├── package2
 │   └── service.py
@@ -58,14 +57,15 @@ from package2 import service
 from func_call_patcher import FuncCallPatcher
 
 
-def decorator_inner_func(func, func_args, func_kwargs, frame):
+def decorator_inner_func(func, func_args, func_kwargs, frame, relationship_identifier):
     print(f'func_args = {func_args}, func_kwargs = {func_kwargs}')
     return func(*func_args, **func_kwargs)
 
 
 func_call_patcher = FuncCallPatcher(
-    path_to_func_in_executable_module='package2.service.some_func',
+    path_to_func='package2.service.some_func',
     line_number_where_func_executed=5,
+    executable_module_name='service.py',
     decorator_inner_func=decorator_inner_func,
     is_method=False,
 )
