@@ -402,6 +402,25 @@ class TestFuncCallPatcher:
         use_casesX.Case17.run()
         assert_file_not_exists()
 
+    def test_case18(self, file_deleter, PACKAGE1_PATH):
+        from func_call_patcher.pytests.playground.package2 import use_casesX
+
+        func_call_patcher = FuncCallPatcher(
+            path_to_func=f'{PACKAGE1_PATH}.src1.some_func',
+            executable_module_name='use_casesX.py',
+            line_number_where_func_executed=191,
+            decorator_inner_func=decorator_inner_func,
+            is_method=True,
+        )
+        with func_call_patcher:
+            use_casesX.Case18.run()
+            assert_file_exists()
+
+        # проверяем, что патч спадет после выхода из контекстного менеджера
+        delete_file()
+        use_casesX.Case18.run()
+        assert_file_not_exists()
+
 
 class TestMultiFuncCallPatcher:
     @staticmethod

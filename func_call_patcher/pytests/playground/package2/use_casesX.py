@@ -178,3 +178,14 @@ class Case17:
         # что патчим Dependency.some_property
         # проверка из кейса патча свойства в более длинной цепочке
         return SecondAggregator().depedency.dependency.some_property
+
+
+class Case18:
+    @classmethod
+    def run(cls):
+        from func_call_patcher.pytests.playground import package1
+
+        # КЕЙС 18
+        # что патчим some_func
+        # проверка из кейса, где функция вызывается по цепочке из нескольких модулей
+        return package1.src1.some_func()
