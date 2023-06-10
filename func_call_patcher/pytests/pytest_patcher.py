@@ -10,19 +10,19 @@ class TestFuncPatcher:
         """
         тестируем, что второй патч на одну и ту же функцию не навесится
         """
-        from func_call_patcher.pytests.playground.package2 import use_cases_X
+        from func_call_patcher.pytests.playground.package2 import use_casesX
 
         func_call_patcher = FuncCallPatcher(
-            path_to_func=f'{PACKAGE2_PATH}.use_cases_X.src1.some_func',
-            executable_module_name='use_cases_X.py',
-            line_number_where_func_executed=11,
+            path_to_func=f'{PACKAGE2_PATH}.use_casesX.some_func',
+            executable_module_name='use_casesX.py',
+            line_number_where_func_executed=30,
             decorator_inner_func=decorator_inner_func,
             is_method=False,
         )
         same_func_call_patcher = FuncCallPatcher(
-            path_to_func=f'{PACKAGE2_PATH}.use_cases_X.src1.some_func',
-            executable_module_name='use_cases_X.py',
-            line_number_where_func_executed=11,
+            path_to_func=f'{PACKAGE2_PATH}.use_casesX.some_func',
+            executable_module_name='use_casesX.py',
+            line_number_where_func_executed=30,
             decorator_inner_func=decorator_inner_func,
             is_method=False,
         )
@@ -30,7 +30,7 @@ class TestFuncPatcher:
             with same_func_call_patcher:
                 assert func_call_patcher._patcher.is_patched is True
                 assert same_func_call_patcher._patcher.is_patched is False
-                use_cases_X.Case_1.run()
+                use_casesX.Case2.run()
 
 
 class TestMethodPatcher:

@@ -11,7 +11,7 @@ robot_model = RobotModel()
 robot = Robot(robot_model=robot_model)
 
 
-def func_to_patch_in_executed_module():
+def local_func():
     return 10
 
 
@@ -86,26 +86,26 @@ class Case8:
     @classmethod
     def run(cls):
         # КЕЙС 8
-        # что патчим: func_to_patch_in_executed_module
-        # проверка юз кейса, когда логика (func_to_patch_in_executed_module) находится в самом запускаемом модуле
-        return func_to_patch_in_executed_module()
+        # что патчим: src_func
+        # проверка юз кейса, когда логика (src_func) находится в самом запускаемом модуле
+        return local_func()
 
 
 class Case9:
     class SomeClass:
-        def func_to_patch_in_executed_module(self):
+        def src_func(self):
             return 10
 
-        def outer_func_to_patch_in_executed_module(self):
+        def to_run_func(self):
             # КЕЙС 9
-            # что патчим: .func_to_patch_in_executed_module
-            # проверка юз кейса, когда логика (.func_to_patch_in_executed_module) в самом запускаемом модуле,
+            # что патчим: .src_func
+            # проверка юз кейса, когда логика (.src_func) в самом запускаемом модуле,
             # в том же классе
-            return self.func_to_patch_in_executed_module()
+            return self.src_func()
 
     @classmethod
     def run(cls):
-        return cls.SomeClass().outer_func_to_patch_in_executed_module()
+        return cls.SomeClass().to_run_func()
 
 
 class Case10:
