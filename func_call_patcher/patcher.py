@@ -18,6 +18,19 @@ def get_func_name_from_path(path_to_func: str):
     return path_to_func.split('.')[-1]
 
 
+class TypeChecker:
+    @classmethod
+    def is_property(cls, obj) -> bool:
+        return isinstance(obj, property)
+
+    @classmethod
+    def is_method(cls, obj) -> bool:
+        # ImportTool._import_class_and_method_from_string возвращает method именно как функцию,
+        #  а не как bound method.
+        # Нам нужно понимать в целом - является ли obj функцией определенной внутри класса
+        return (inspect.isfunction(obj) or inspect.ismethod(obj)) and not cls.is_property(obj)
+
+
 class IPatcher(abc.ABC):
     @abc.abstractmethod
     def __init__(
@@ -92,7 +105,8 @@ class FuncPatcher(BasePatcher):
         does_func_need_a_patch: bool = field(init=False)
         patcher = field(init=False)
 
-    def _is_func_already_patched(self, func) -> bool:
+    @staticmethod
+    def is_func_already_patched(func) -> bool:
         return isinstance(func, Mock) and hasattr(func, PATCHED_BY_FUNC_CALL_PATCHER_TAG)
 
     @property
@@ -103,7 +117,7 @@ class FuncPatcher(BasePatcher):
         func_to_patch = ImportTool.import_func_from_string(path_to_func=self.path_to_func)
         self.data_container = self.DataContainer()
 
-        if self._is_func_already_patched(func=func_to_patch):
+        if self.is_func_already_patched(func=func_to_patch):
             self.data_container.does_func_need_a_patch = False
             return self
 
@@ -131,9 +145,6 @@ class MethodPatcherFacade(BasePatcher):
     def is_patched(self) -> bool:
         return hasattr(self, 'data_container') and self.data_container.patcher.data_container.does_need_a_patch
 
-    def _is_func(self, method):
-        return inspect.isfunction(method) or inspect.ismethod(method)
-
     def __enter__(self, *args, **kwargs):
         class_obj, method = ImportTool.import_class_and_method_from_string(path_to_func=self.path_to_func)
 
@@ -142,7 +153,7 @@ class MethodPatcherFacade(BasePatcher):
         method_name_from_path = get_func_name_from_path(path_to_func=self.path_to_func)
 
         self.data_container = self.DataContainer()
-        if isinstance(method, property):
+        if TypeChecker.is_property(method):
             property_patcher = PropertyPatcher(
                 class_obj=class_obj,
                 property_=method,
@@ -152,7 +163,7 @@ class MethodPatcherFacade(BasePatcher):
             property_patcher.patch()
             self.data_container.patcher = property_patcher
 
-        if self._is_func(method=method):
+        if TypeChecker.is_method(method):
             method_patcher = MethodPatcher(
                 class_obj=class_obj,
                 method=method,
@@ -185,11 +196,12 @@ class MethodPatcher:
         self.decorate_func_call = decorate_func_call_func
         self.data_container = self.DataContainer()
 
-    def _is_method_aready_patched(self) -> bool:
-        return hasattr(self.method, PATCHED_BY_FUNC_CALL_PATCHER_TAG)
+    @staticmethod
+    def is_method_aready_patched(method) -> bool:
+        return hasattr(method, PATCHED_BY_FUNC_CALL_PATCHER_TAG)
 
     def patch(self) -> None:
-        if self._is_method_aready_patched():
+        if self.is_method_aready_patched(method=self.method):
             self.data_container.does_need_a_patch = False
             return
 
@@ -227,11 +239,12 @@ class PropertyPatcher:
         self.decorate_func_call_func = decorate_func_call
         self.data_container = self.DataContainer()
 
-    def _is_property_already_patched(self) -> bool:
-        return hasattr(self.property_.fget, PATCHED_BY_FUNC_CALL_PATCHER_TAG)
+    @staticmethod
+    def is_property_already_patched(property_) -> bool:
+        return hasattr(property_.fget, PATCHED_BY_FUNC_CALL_PATCHER_TAG)
 
     def patch(self) -> None:
-        if self._is_property_already_patched():
+        if self.is_property_already_patched(property_=self.property_):
             self.data_container.does_need_a_patch = False
             return
 
