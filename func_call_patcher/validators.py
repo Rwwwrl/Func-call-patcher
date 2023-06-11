@@ -5,6 +5,7 @@ from attrs import define
 
 from .exceptions import ItCannotBeImported
 from .import_tool import ImportTool
+from .patcher import FuncPatcher, MethodPatcher, PropertyPatcher, TypeChecker
 
 
 @define
@@ -27,6 +28,10 @@ class ExecutableModuleNameIsIncorrect(BaseValidatationException):
 
 
 class PathToFuncIsIncorrect(BaseValidatationException):
+    pass
+
+
+class FuncAlreadyPatched(BaseValidatationException):
     pass
 
 
@@ -90,19 +95,42 @@ class FuncCanBeImportedValidator(IValidator):
             )
 
 
+class IsFuncAlreadyPatchedValidator(IValidator):
+
+    obj: PathData
+
+    def validate(self) -> None:
+
+        if self.obj.is_method:
+            _, func = ImportTool.import_class_and_method_from_string(path_to_func=self.obj.path_to_func)
+            if FuncPatcher.is_func_already_patched(func):
+                raise FuncAlreadyPatched('эта функция уже была запатчена')
+        else:
+            func = ImportTool.import_func_from_string(path_to_func=self.obj.path_to_func)
+            if TypeChecker.is_property(func):
+                if PropertyPatcher.is_property_already_patched(property_=func):
+                    raise FuncAlreadyPatched('это свойство уже было запатчено')
+            if TypeChecker.is_method(func):
+                if MethodPatcher.is_method_aready_patched(method=func):
+                    raise FuncAlreadyPatched('этот метод уже было запатчен')
+
+
 def validate(
     line_number_where_func_executed: int,
     executable_module_name: str,
     path_to_func: str,
     is_method: bool,
 ):
+    path_data = PathData(
+        path_to_func=path_to_func,
+        is_method=is_method,
+    )
+
     validators: List[IValidator] = [
         LineNumberValidator(obj=line_number_where_func_executed),
-        FuncCanBeImportedValidator(obj=PathData(
-            path_to_func=path_to_func,
-            is_method=is_method,
-        )),
+        FuncCanBeImportedValidator(obj=path_data),
         ExecutableModuleNameValidator(obj=executable_module_name),
+        IsFuncAlreadyPatchedValidator(obj=path_data),
     ]
 
     for validator in validators:
