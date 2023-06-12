@@ -182,3 +182,13 @@ class Case_18:
         # что патчим some_func
         # проверка из кейса, где функция вызывается по цепочке из нескольких модулей
         return playground.package1.src1.some_func()
+
+
+class Case_19:
+    @classmethod
+    def run(cls):
+        # КЕЙС 19
+        # что патчим Robot.base_robot_method
+        # проверка из кейса, где метод определен не в самом классе, а в его родителе
+
+        return robot.base_robot_method()
