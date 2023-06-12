@@ -383,6 +383,25 @@ class TestFuncCallPatcherCaseX:
         use_casesX.Case18.run()
         assert_file_not_exists()
 
+    def test_case19(self, file_deleter, PACKAGE1_PATH):
+        from func_call_patcher.pytests.playground.package2 import use_casesX
+
+        func_call_patcher = FuncCallPatcher(
+            path_to_func=f'{PACKAGE1_PATH}.src1.BaseRobot.base_robot_method',
+            executable_module_name='use_casesX.py',
+            line_number_where_func_executed=201,
+            decorator_inner_func=decorator_inner_func,
+            is_method=True,
+        )
+        with func_call_patcher:
+            use_casesX.Case19.run()
+            assert_file_exists()
+
+        # проверяем, что патч спадет после выхода из контекстного менеджера
+        delete_file()
+        use_casesX.Case19.run()
+        assert_file_not_exists()
+
 
 class TestFuncCallPatcherCase_X:
     def test_case_1(self, file_deleter, PACKAGE2_PATH):
@@ -721,6 +740,25 @@ class TestFuncCallPatcherCase_X:
         # проверяем, что патч спадет после выхода из контекстного менеджера
         delete_file()
         use_cases_X.Case_18.run()
+        assert_file_not_exists()
+
+    def test_case_19(self, file_deleter, PACKAGE1_PATH):
+        from func_call_patcher.pytests.playground.package2 import use_cases_X
+
+        func_call_patcher = FuncCallPatcher(
+            path_to_func=f'{PACKAGE1_PATH}.src1.BaseRobot.base_robot_method',
+            executable_module_name='use_cases_X.py',
+            line_number_where_func_executed=194,
+            decorator_inner_func=decorator_inner_func,
+            is_method=True,
+        )
+        with func_call_patcher:
+            use_cases_X.Case_19.run()
+            assert_file_exists()
+
+        # проверяем, что патч спадет после выхода из контекстного менеджера
+        delete_file()
+        use_cases_X.Case_19.run()
         assert_file_not_exists()
 
 

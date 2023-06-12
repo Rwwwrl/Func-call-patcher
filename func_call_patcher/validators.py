@@ -101,7 +101,7 @@ class IsFuncAlreadyPatchedValidator(IValidator):
 
     def validate(self) -> None:
 
-        if self.obj.is_method:
+        if not self.obj.is_method:
             _, func = ImportTool.import_class_and_method_from_string(path_to_func=self.obj.path_to_func)
             if FuncPatcher.is_func_already_patched(func):
                 raise FuncAlreadyPatched('эта функция уже была запатчена')

@@ -41,7 +41,12 @@ class RobotModel:
         return 10
 
 
-class Robot:
+class BaseRobot:
+    def base_robot_method(self) -> int:
+        return 10
+
+
+class Robot(BaseRobot):
     def __init__(self, robot_model: RobotModel):
         self.robot_model = robot_model
 
