@@ -383,11 +383,11 @@ class TestFuncCallPatcherCaseX:
         use_casesX.Case18.run()
         assert_file_not_exists()
 
-    def test_case19(self, file_deleter, PACKAGE1_PATH):
+    def test_case19(self, file_deleter, PACKAGE2_PATH):
         from func_call_patcher.pytests.playground.package2 import use_casesX
 
         func_call_patcher = FuncCallPatcher(
-            path_to_func=f'{PACKAGE1_PATH}.src1.BaseRobot.base_robot_method',
+            path_to_func=f'{PACKAGE2_PATH}.use_casesX.Robot.base_robot_method',
             executable_module_name='use_casesX.py',
             line_number_where_func_executed=201,
             decorator_inner_func=decorator_inner_func,
@@ -742,11 +742,11 @@ class TestFuncCallPatcherCase_X:
         use_cases_X.Case_18.run()
         assert_file_not_exists()
 
-    def test_case_19(self, file_deleter, PACKAGE1_PATH):
+    def test_case_19(self, file_deleter, PACKAGE2_PATH):
         from func_call_patcher.pytests.playground.package2 import use_cases_X
 
         func_call_patcher = FuncCallPatcher(
-            path_to_func=f'{PACKAGE1_PATH}.src1.BaseRobot.base_robot_method',
+            path_to_func=f'{PACKAGE2_PATH}.use_cases_X.src1.Robot.base_robot_method',
             executable_module_name='use_cases_X.py',
             line_number_where_func_executed=194,
             decorator_inner_func=decorator_inner_func,
