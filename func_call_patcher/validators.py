@@ -64,7 +64,7 @@ class ExecutableModuleNameValidator(IValidator):
             raise ExecutableModuleNameIsIncorrect('формат имени модуля должен быть: <filename>.py')
         if not filename:
             raise ExecutableModuleNameIsIncorrect('наименование файла не должно быть пустым')
-        if file_ext != '.py':
+        if file_ext != 'py':
             raise ExecutableModuleNameIsIncorrect('расширение файла должно быть ".py"')
 
 
@@ -101,18 +101,18 @@ class IsFuncAlreadyPatchedValidator(IValidator):
 
     def validate(self) -> None:
 
-        if not self.obj.is_method:
-            _, func = ImportTool.import_class_and_method_from_string(path_to_func=self.obj.path_to_func)
-            if FuncPatcher.is_func_already_patched(func):
-                raise FuncAlreadyPatched('эта функция уже была запатчена')
+        if self.obj.is_method:
+            _, method = ImportTool.import_class_and_method_from_string(path_to_func=self.obj.path_to_func)
+            if TypeChecker.is_property(method):
+                if PropertyPatcher.is_property_already_patched(property_=method):
+                    raise FuncAlreadyPatched('это свойство уже было запатчено')
+            elif TypeChecker.is_method(method):
+                if MethodPatcher.is_method_aready_patched(method=method):
+                    raise FuncAlreadyPatched('этот метод уже было запатчен')
         else:
             func = ImportTool.import_func_from_string(path_to_func=self.obj.path_to_func)
-            if TypeChecker.is_property(func):
-                if PropertyPatcher.is_property_already_patched(property_=func):
-                    raise FuncAlreadyPatched('это свойство уже было запатчено')
-            if TypeChecker.is_method(func):
-                if MethodPatcher.is_method_aready_patched(method=func):
-                    raise FuncAlreadyPatched('этот метод уже было запатчен')
+            if FuncPatcher.is_func_already_patched(func=func):
+                raise FuncAlreadyPatched('эта функция уже была запатчена')
 
 
 def validate(
