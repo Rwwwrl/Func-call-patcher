@@ -34,11 +34,7 @@ class ImportTool:
         full_path_to_module = '.'.join(path_to_func_splitted[:-2])
         module_name, func_name = path_to_func_splitted[-2:]
 
-        try:
-            exec(f'from {full_path_to_module} import {module_name}')
-        except Exception:
-            cls._raise_it_cannot_be_imported_error(path_to_func=path_to_func)
-
+        exec(f'from {full_path_to_module} import {module_name}')
         module = locals()[module_name]
         func = getattr(module, func_name)
 
