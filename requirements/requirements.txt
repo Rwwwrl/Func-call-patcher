@@ -1,2 +1,2 @@
-pytest
-mock
+-r dependencies.txt
+-r for_develop.txt
