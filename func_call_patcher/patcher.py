@@ -162,6 +162,7 @@ class MethodPatcherFacade(BasePatcher):
             )
             property_patcher.patch()
             self.data_container.patcher = property_patcher
+            return self
 
         if TypeChecker.is_method(method):
             method_patcher = MethodPatcher(
@@ -172,6 +173,7 @@ class MethodPatcherFacade(BasePatcher):
             )
             method_patcher.patch()
             self.data_container.patcher = method_patcher
+            return self
 
     def __exit__(self, *args, **kwargs):
         self.data_container.patcher.unpatch()

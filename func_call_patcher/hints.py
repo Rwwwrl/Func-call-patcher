@@ -6,6 +6,6 @@ RelationshipIdentifier = Union[UUID, str, int, float]
 """идентификатор взаимосвязанности"""
 
 FuncToPatch = Callable
-FuncToPathcArgs = Tuple[Any]
+FuncToPatchArgs = Tuple[Any]
 FuncToPatchKwargs = Dict[Any, Any]
-DecoratorInnerFunc = Callable[[FuncToPatch, FuncToPathcArgs, FuncToPatchKwargs, FrameType, RelationshipIdentifier], Any]
+DecoratorInnerFunc = Callable[[FuncToPatch, FuncToPatchArgs, FuncToPatchKwargs, FrameType, RelationshipIdentifier], Any]
