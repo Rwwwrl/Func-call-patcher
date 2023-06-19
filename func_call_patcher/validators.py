@@ -50,7 +50,7 @@ class LineNumberValidator(IValidator):
 
     def validate(self) -> None:
         if self.obj <= 0:
-            raise LineNumberIsIncorrect(f"{self.obj} должно > 0")
+            raise LineNumberIsIncorrect(f'{self.obj} должно > 0')
 
 
 class ExecutableModuleNameValidator(IValidator):
@@ -89,7 +89,7 @@ class FuncCanBeImportedValidator(IValidator):
                 declension = 'импортированa'
             raise PathToFuncIsIncorrect(
                 f"""
-                {func_type} по пути '{self.obj.path_to_func.path}' не может быть {declension},
+                {func_type} по пути '{self.obj.path_to_func}' не может быть {declension},
                 проверьте правильно ли вы указали путь.
                 """,
             )
